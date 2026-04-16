@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOOP VIRTUAL — 버추얼 스트리머 아카이브</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo" onclick="location.href='/'">SOOP_VIRTUAL</div>
+  <div class="nav-meta">// curated.reviews</div>
+</header>
+
+<section class="hero">
+  <div class="hero-label">— Personal Archive · Est. 2026</div>
+  <h1>SOOP<br><em>VIRTUAL</em></h1>
+</section>
+
+<div class="controls">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="이름, 태그로 검색...">
+  </div>
+  <div class="sort-wrap">
+    <span class="sort-label">SORT</span>
+    <select id="sortSelect">
+      <option value="newest">최신순</option>
+      <option value="oldest">오래된순</option>
+      <option value="rating_desc">별점 높은 순</option>
+      <option value="rating_asc">별점 낮은 순</option>
+      <option value="visitor_desc">방문자 평점 높은 순</option>
+      <option value="visitor_asc">방문자 평점 낮은 순</option>
+      <option value="name">이름순</option>
+    </select>
+  </div>
+</div>
+
+<main class="gallery" id="gallery">
+  <div class="loading">Loading archive...</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/js/supabase.js"></script>
+<script src="/js/gallery.js"></script>
+</body>
+</html>

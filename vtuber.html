@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOOP VIRTUAL</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo" onclick="location.href='/'">SOOP_VIRTUAL</div>
+  <a href="/" class="back-link">BACK TO ARCHIVE</a>
+</header>
+
+<main class="detail" id="detail">
+  <div class="loading">Loading...</div>
+</main>
+
+<div class="lightbox" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightboxImg" alt="">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="/js/supabase.js"></script>
+<script src="/js/markdown.js"></script>
+<script src="/js/detail.js"></script>
+</body>
+</html>

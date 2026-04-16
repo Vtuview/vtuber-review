@@ -1,0 +1,30 @@
+# Netlify 설정
+
+[build]
+  publish = "."
+
+# URL 단축: /v/슬러그 → vtuber.html?slug=슬러그
+[[redirects]]
+  from = "/v/:slug"
+  to = "/vtuber.html?slug=:slug"
+  status = 200
+
+# 관리자 페이지 캐시 방지
+[[headers]]
+  for = "/admin.html"
+  [headers.values]
+    Cache-Control = "no-store"
+    X-Frame-Options = "DENY"
+
+# HTML 파일 캐시 짧게 (배포 반영 빠르게)
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# 기본 보안 헤더
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
