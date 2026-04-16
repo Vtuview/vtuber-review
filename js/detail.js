@@ -68,11 +68,22 @@ function renderDetail(v) {
   ).join('');
 
   const platforms = v.platforms || {};
-  const platformLinks = Object.entries(platforms)
-    .filter(([, url]) => url)
-    .map(([k, url]) =>
-      `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="platform-link">${k.toUpperCase()}</a>`
-    ).join('');
+  // SOOP를 항상 맨 앞으로 정렬, 라벨 한글화
+  const platformLabels = {
+    soop: 'SOOP 방송국',
+    etc: '기타 링크',
+    youtube: 'YOUTUBE',
+    twitch: 'TWITCH',
+  };
+  const platformOrder = ['soop', 'etc', 'youtube', 'twitch'];
+  const platformLinks = platformOrder
+    .filter(key => platforms[key])
+    .map(key => {
+      const url = platforms[key];
+      const label = platformLabels[key] || key.toUpperCase();
+      const cls = key === 'soop' ? 'platform-link soop' : 'platform-link';
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="${cls}">${label}</a>`;
+    }).join('');
 
   const tags = (v.tags || []).map(t =>
     `<span class="card-tag">${escapeHtml(t)}</span>`
