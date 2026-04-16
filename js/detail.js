@@ -103,7 +103,7 @@ function renderDetail(v) {
         <div class="card-rating" style="border: none; padding: 0; margin-bottom: 1.5rem;">
           <span class="stars">${stars}</span>
           <span class="rating-num">${(v.my_rating || 0).toFixed(1)} / 5.0</span>
-          <span class="rating-count">본인 평점</span>
+          <span class="rating-count"> </span>
         </div>
         <div class="card-tags">${tags}</div>
         <div class="detail-meta">
