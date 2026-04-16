@@ -70,8 +70,8 @@ function renderDetail(v) {
   const platforms = v.platforms || {};
   // SOOP를 항상 맨 앞으로 정렬, 라벨 한글화
   const platformLabels = {
-    soop: 'SOOP 방송국',
-    etc: '풍투데이',
+    soop: '방송국 바로가기',
+    etc: '기타 링크',
     youtube: 'YOUTUBE',
     twitch: 'TWITCH',
   };
@@ -103,7 +103,7 @@ function renderDetail(v) {
         <div class="card-rating" style="border: none; padding: 0; margin-bottom: 1.5rem;">
           <span class="stars">${stars}</span>
           <span class="rating-num">${(v.my_rating || 0).toFixed(1)} / 5.0</span>
-          <span class="rating-count"> </span>
+          <span class="rating-count">본인 평점</span>
         </div>
         <div class="card-tags">${tags}</div>
         <div class="detail-meta">
