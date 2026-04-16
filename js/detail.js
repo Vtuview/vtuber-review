@@ -2,16 +2,27 @@
 
 // 슬러그 추출: 두 가지 경로 모두 지원
 // 1. /vtuber.html?slug=xxx  (기존 방식)
-// 2. /v/xxx                  (Netlify 리라이트 또는 직접 접근)
+// 2. /v/xxx                  (Cloudflare Functions 또는 Netlify 리라이트)
 function getSlug() {
+  console.log('[getSlug] pathname:', location.pathname);
+  console.log('[getSlug] search:', location.search);
+  console.log('[getSlug] href:', location.href);
+
   const params = new URLSearchParams(location.search);
   const fromQuery = params.get('slug');
-  if (fromQuery) return fromQuery;
+  if (fromQuery) {
+    console.log('[getSlug] from query:', fromQuery);
+    return fromQuery;
+  }
 
   // /v/슬러그 형태 직접 파싱
-  const match = location.pathname.match(/^\/v\/([^/?#]+)/);
-  if (match) return decodeURIComponent(match[1]);
+  const match = location.pathname.match(/\/v\/([^/?#]+)/);
+  if (match) {
+    console.log('[getSlug] from pathname:', match[1]);
+    return decodeURIComponent(match[1]);
+  }
 
+  console.log('[getSlug] no slug found');
   return null;
 }
 
@@ -24,9 +35,17 @@ let selectedRating = 0;
 async function loadDetail() {
   console.log('[detail] slug:', vtuberSlug, 'id:', vtuberIdParam);
 
-  // 둘 다 없으면 메인으로
+  // 둘 다 없으면 에러 표시 (디버깅용 - 바로 리다이렉트하지 않음)
   if (!vtuberSlug && !vtuberIdParam) {
-    location.href = '/';
+    console.error('[detail] 슬러그/ID 둘 다 없음. pathname:', location.pathname);
+    document.getElementById('detail').innerHTML =
+      `<div class="empty-state">
+        [DEBUG] 슬러그 파싱 실패<br>
+        pathname: ${location.pathname}<br>
+        search: ${location.search}<br>
+        href: ${location.href}<br><br>
+        <a href="/" style="color:var(--accent);">← 메인으로</a>
+      </div>`;
     return;
   }
 
