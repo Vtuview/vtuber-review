@@ -90,7 +90,7 @@ function renderDetail(v) {
   // SOOP를 항상 맨 앞으로 정렬, 라벨 한글화
   const platformLabels = {
     soop: '방송국 바로가기',
-    etc: '기타 링크',
+    etc: '풍투데이',
     youtube: 'YOUTUBE',
     twitch: 'TWITCH',
   };
