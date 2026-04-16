@@ -4,25 +4,14 @@
 // 1. /vtuber.html?slug=xxx  (기존 방식)
 // 2. /v/xxx                  (Cloudflare Functions 또는 Netlify 리라이트)
 function getSlug() {
-  console.log('[getSlug] pathname:', location.pathname);
-  console.log('[getSlug] search:', location.search);
-  console.log('[getSlug] href:', location.href);
-
   const params = new URLSearchParams(location.search);
   const fromQuery = params.get('slug');
-  if (fromQuery) {
-    console.log('[getSlug] from query:', fromQuery);
-    return fromQuery;
-  }
+  if (fromQuery) return fromQuery;
 
   // /v/슬러그 형태 직접 파싱
   const match = location.pathname.match(/\/v\/([^/?#]+)/);
-  if (match) {
-    console.log('[getSlug] from pathname:', match[1]);
-    return decodeURIComponent(match[1]);
-  }
+  if (match) return decodeURIComponent(match[1]);
 
-  console.log('[getSlug] no slug found');
   return null;
 }
 
@@ -33,23 +22,11 @@ let currentVtuberId = null;
 let selectedRating = 0;
 
 async function loadDetail() {
-  console.log('[detail] slug:', vtuberSlug, 'id:', vtuberIdParam);
-
-  // 둘 다 없으면 에러 표시 (디버깅용 - 바로 리다이렉트하지 않음)
   if (!vtuberSlug && !vtuberIdParam) {
-    console.error('[detail] 슬러그/ID 둘 다 없음. pathname:', location.pathname);
-    document.getElementById('detail').innerHTML =
-      `<div class="empty-state">
-        [DEBUG] 슬러그 파싱 실패<br>
-        pathname: ${location.pathname}<br>
-        search: ${location.search}<br>
-        href: ${location.href}<br><br>
-        <a href="/" style="color:var(--accent);">← 메인으로</a>
-      </div>`;
+    location.href = '/';
     return;
   }
 
-  // slug 우선, 없으면 id로 조회
   let query = db.from('vtubers').select('*');
   if (vtuberSlug) {
     query = query.eq('slug', vtuberSlug);
@@ -60,7 +37,6 @@ async function loadDetail() {
   const { data: v, error } = await query.maybeSingle();
 
   if (error) {
-    console.error('[detail] DB error:', error);
     document.getElementById('detail').innerHTML =
       `<div class="empty-state">데이터 조회 오류: ${error.message}<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
     return;
@@ -69,7 +45,7 @@ async function loadDetail() {
   if (!v) {
     document.getElementById('detail').innerHTML =
       `<div class="empty-state">
-        슬러그 "${vtuberSlug || vtuberIdParam}" 에 해당하는 버튜버를 찾을 수 없습니다.
+        해당하는 버튜버를 찾을 수 없습니다.
         <br><br>
         <a href="/" style="color:var(--accent);">← 메인으로</a>
       </div>`;
@@ -87,7 +63,6 @@ function renderDetail(v) {
   ).join('');
 
   const platforms = v.platforms || {};
-  // SOOP를 항상 맨 앞으로 정렬, 라벨 한글화
   const platformLabels = {
     soop: '방송국 바로가기',
     etc: '풍투데이',
@@ -108,7 +83,6 @@ function renderDetail(v) {
     `<span class="card-tag">${escapeHtml(t)}</span>`
   ).join(' ');
 
-  // 리뷰 마크다운 렌더링
   const reviewHTML = renderMarkdown(v.my_review);
 
   document.getElementById('detail').innerHTML = `
@@ -151,11 +125,9 @@ function renderDetail(v) {
     <div class="review-list" id="reviewList"></div>
   `;
 
-  // 이미지 라이트박스
   const reviewContent = document.getElementById('reviewContent');
   if (reviewContent) attachImageLightbox(reviewContent);
 
-  // 별 입력
   const starBtns = document.querySelectorAll('#starInput button');
   starBtns.forEach(b => {
     b.addEventListener('click', () => {
