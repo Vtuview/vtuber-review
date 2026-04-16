@@ -530,21 +530,81 @@ body::before {
   margin-bottom: 0.3rem;
 }
 
-.platform-links { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.platform-links {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.4rem;
+}
+
 .platform-link {
-  padding: 0.5rem 1rem;
+  padding: 0.65rem 1.2rem;
   border: 1px solid var(--border);
   border-radius: 2px;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--text);
   text-decoration: none;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   transition: all 0.2s;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
 }
-.platform-link:hover { border-color: var(--accent); color: var(--accent); }
+.platform-link:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+/* SOOP 전용 강조 스타일 (primary CTA) */
+.platform-link.soop {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  padding: 0.75rem 1.4rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  box-shadow: 0 4px 16px rgba(255, 46, 106, 0.2);
+}
+.platform-link.soop:hover {
+  background: #ff4f84;
+  border-color: #ff4f84;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(255, 46, 106, 0.35);
+  transform: translateY(-2px);
+}
+
+/* SOOP 버튼 앞의 라이브 아이콘 (빨간 점) */
+.platform-link.soop::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.3);
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 2px rgba(255,255,255,0.3); }
+  50% { opacity: 0.6; box-shadow: 0 0 0 6px rgba(255,255,255,0); }
+}
+
+/* 화살표 (SOOP가 아닌 다른 링크) */
+.platform-link:not(.soop)::after {
+  content: '↗';
+  font-size: 0.9em;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+.platform-link:not(.soop):hover::after {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
 
 /* ===== 섹션 제목 ===== */
 .section-title {
