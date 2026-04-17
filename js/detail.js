@@ -1,27 +1,54 @@
 // ===== 상세 페이지 =====
 
-const params = new URLSearchParams(location.search);
-const slugParam = params.get('slug');
-const idParam = params.get('id');
+// 슬러그 추출: 두 가지 경로 모두 지원
+// 1. /vtuber.html?slug=xxx  (기존 방식)
+// 2. /v/xxx                  (Cloudflare Functions 또는 Netlify 리라이트)
+function getSlug() {
+  const params = new URLSearchParams(location.search);
+  const fromQuery = params.get('slug');
+  if (fromQuery) return fromQuery;
+
+  // /v/슬러그 형태 직접 파싱
+  const match = location.pathname.match(/\/v\/([^/?#]+)/);
+  if (match) return decodeURIComponent(match[1]);
+
+  return null;
+}
+
+const vtuberSlug = getSlug();
+const vtuberIdParam = new URLSearchParams(location.search).get('id');
 
 let currentVtuberId = null;
 let selectedRating = 0;
 
 async function loadDetail() {
-  if (!slugParam && !idParam) { location.href = 'index.html'; return; }
-
-  let query = db.from('vtubers').select('*');
-  if (slugParam) {
-    query = query.eq('slug', slugParam);
-  } else {
-    query = query.eq('id', idParam);
+  if (!vtuberSlug && !vtuberIdParam) {
+    location.href = '/';
+    return;
   }
 
-  const { data: v, error } = await query.single();
+  let query = db.from('vtubers').select('*');
+  if (vtuberSlug) {
+    query = query.eq('slug', vtuberSlug);
+  } else {
+    query = query.eq('id', vtuberIdParam);
+  }
 
-  if (error || !v) {
+  const { data: v, error } = await query.maybeSingle();
+
+  if (error) {
     document.getElementById('detail').innerHTML =
-      '<div class="empty-state">찾을 수 없는 버추얼 스트리머입니다.</div>';
+      `<div class="empty-state">데이터 조회 오류: ${error.message}<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
+    return;
+  }
+
+  if (!v) {
+    document.getElementById('detail').innerHTML =
+      `<div class="empty-state">
+        해당하는 버튜버를 찾을 수 없습니다.
+        <br><br>
+        <a href="/" style="color:var(--accent);">← 메인으로</a>
+      </div>`;
     return;
   }
 
@@ -31,58 +58,32 @@ async function loadDetail() {
 }
 
 function renderDetail(v) {
-  // 세분화 별점 4항목 평균 → 총점
-  const totalScore = calcTotalScore(v);
-  const stars = renderStars(totalScore);
+  const stars = Array.from({ length: 5 }, (_, i) =>
+    i < Math.round(v.my_rating || 0) ? '★' : '<span class="empty">★</span>'
+  ).join('');
+
+  const platforms = v.platforms || {};
+  const platformLabels = {
+    soop: '방송국 바로가기',
+    etc: '풍투데이',
+    youtube: 'YOUTUBE',
+    twitch: 'TWITCH',
+  };
+  const platformOrder = ['soop', 'etc', 'youtube', 'twitch'];
+  const platformLinks = platformOrder
+    .filter(key => platforms[key])
+    .map(key => {
+      const url = platforms[key];
+      const label = platformLabels[key] || key.toUpperCase();
+      const cls = key === 'soop' ? 'platform-link soop' : 'platform-link';
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="${cls}">${label}</a>`;
+    }).join('');
 
   const tags = (v.tags || []).map(t =>
     `<span class="card-tag">${escapeHtml(t)}</span>`
-  ).join('');
+  ).join(' ');
 
-  // 카테고리
-  const category = v.category || '리뷰';
-  const catClass = category === '데뷔정보' ? 'cat-debut' : category === '근황' ? 'cat-update' : 'cat-review';
-
-  // 작성날짜
-  const dateStr = formatDate(v.created_date || v.created_at);
-
-  // SOOP 링크
-  const soopLink = v.soop_id
-    ? `<a href="https://www.sooplive.com/${escapeHtml(v.soop_id)}" target="_blank" rel="noopener" class="platform-link soop-link">SOOP</a>`
-    : '';
-
-  // 세분화 별점 UI
-  const detailRatings = `
-    <div class="detail-ratings-grid">
-      <div class="detail-rating-item">
-        <span class="detail-rating-label">아바타</span>
-        <span class="stars">${renderStars(v.rating_avatar || 0)}</span>
-        <span class="rating-num">${(v.rating_avatar || 0).toFixed(1)}</span>
-      </div>
-      <div class="detail-rating-item">
-        <span class="detail-rating-label">소통</span>
-        <span class="stars">${renderStars(v.rating_comm || 0)}</span>
-        <span class="rating-num">${(v.rating_comm || 0).toFixed(1)}</span>
-      </div>
-      <div class="detail-rating-item">
-        <span class="detail-rating-label">노래</span>
-        <span class="stars">${renderStars(v.rating_song || 0)}</span>
-        <span class="rating-num">${(v.rating_song || 0).toFixed(1)}</span>
-      </div>
-      <div class="detail-rating-item">
-        <span class="detail-rating-label">출석률</span>
-        <span class="stars">${renderStars(v.rating_attendance || 0)}</span>
-        <span class="rating-num">${(v.rating_attendance || 0).toFixed(1)}</span>
-      </div>
-    </div>
-  `;
-
-  // 상세 정보 필드 (누적방송시간, 애청자, 팬클럽, 구독)
-  const infoFields = [];
-  if (v.total_hours) infoFields.push(`<div class="detail-meta-item"><span>누적 방송시간</span>${escapeHtml(String(v.total_hours))}</div>`);
-  if (v.favorites) infoFields.push(`<div class="detail-meta-item"><span>애청자</span>${escapeHtml(String(v.favorites))}</div>`);
-  if (v.fanclub) infoFields.push(`<div class="detail-meta-item"><span>팬클럽</span>${escapeHtml(String(v.fanclub))}</div>`);
-  if (v.subscribers) infoFields.push(`<div class="detail-meta-item"><span>구독</span>${escapeHtml(String(v.subscribers))}</div>`);
+  const reviewHTML = renderMarkdown(v.my_review);
 
   document.getElementById('detail').innerHTML = `
     <div class="detail-hero">
@@ -91,77 +92,63 @@ function renderDetail(v) {
              onerror="this.style.display='none'">
       </div>
       <div>
-        <div class="detail-top-row">
-          <span class="card-category ${catClass}">${escapeHtml(category)}</span>
-          <span class="detail-date">${dateStr}</span>
-        </div>
         <h1 class="detail-name">${escapeHtml(v.name)}</h1>
-
-        <!-- 총점 -->
-        <div class="card-rating" style="border:none; padding:0; margin-bottom:0.8rem;">
+        <div class="card-rating" style="border: none; padding: 0; margin-bottom: 1.5rem;">
           <span class="stars">${stars}</span>
-          <span class="rating-num">${totalScore.toFixed(1)} / 5.0</span>
-          <span class="rating-count">총점 (평균)</span>
+          <span class="rating-num">${(v.my_rating || 0).toFixed(1)} / 5.0</span>
+          <span class="rating-count"> </span>
         </div>
-
-        <!-- 세분화 별점 -->
-        ${detailRatings}
-
         <div class="card-tags">${tags}</div>
-
         <div class="detail-meta">
           ${v.debut_date ? `<div class="detail-meta-item"><span>DEBUT</span>${v.debut_date}</div>` : ''}
-          ${infoFields.join('')}
         </div>
-        ${soopLink ? `<div class="platform-links">${soopLink}</div>` : ''}
+        ${platformLinks ? `<div class="platform-links">${platformLinks}</div>` : ''}
       </div>
     </div>
 
-    ${v.my_review ? `<section class="detail-review"><h2>리뷰</h2><div class="review-content">${renderMarkdown(v.my_review)}</div></section>` : ''}
+    ${reviewHTML ? `
+      <h2 class="section-title">리뷰</h2>
+      <div class="md-content" id="reviewContent">${reviewHTML}</div>
+    ` : ''}
 
-    <section class="detail-visitor-rating">
-      <h2>방문자 평가</h2>
-      <div class="visitor-rating-box">
-        <div class="star-select" id="starSelect">
-          ${[1,2,3,4,5].map(i => `<span class="star-btn" data-val="${i}">☆</span>`).join('')}
-        </div>
-        <textarea id="visitorComment" placeholder="한줄 코멘트 (선택)" maxlength="200"></textarea>
-        <button class="btn btn-accent" onclick="submitRating()">평가하기</button>
-        <div id="ratingMsg" style="margin-top:0.5rem; font-size:0.75rem;"></div>
+    <h2 class="section-title">방문자 별점</h2>
+    <div class="rating-form">
+      <div>당신의 평점을 남겨주세요</div>
+      <div class="star-input" id="starInput">
+        ${[1,2,3,4,5].map(n => `<button data-value="${n}">★</button>`).join('')}
       </div>
-      <div id="reviewsList"></div>
-    </section>
+      <textarea id="commentInput" placeholder="코멘트 (선택)"></textarea>
+      <button class="btn" id="submitRating">SUBMIT</button>
+      <div id="ratingMsg" style="margin-top:1rem; font-family: var(--font-mono); font-size: 0.8rem;"></div>
+    </div>
+
+    <div class="review-list" id="reviewList"></div>
   `;
 
-  // 별 클릭 이벤트
-  document.querySelectorAll('.star-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      selectedRating = parseInt(btn.dataset.val);
-      document.querySelectorAll('.star-btn').forEach((b, i) => {
-        b.textContent = i < selectedRating ? '★' : '☆';
-        b.classList.toggle('active', i < selectedRating);
-      });
+  const reviewContent = document.getElementById('reviewContent');
+  if (reviewContent) attachImageLightbox(reviewContent);
+
+  const starBtns = document.querySelectorAll('#starInput button');
+  starBtns.forEach(b => {
+    b.addEventListener('click', () => {
+      selectedRating = parseInt(b.dataset.value);
+      starBtns.forEach((x, i) => x.classList.toggle('active', i < selectedRating));
     });
   });
-}
 
-function calcTotalScore(v) {
-  const scores = [
-    v.rating_avatar || 0,
-    v.rating_comm || 0,
-    v.rating_song || 0,
-    v.rating_attendance || 0
-  ].filter(s => s > 0);
-  if (scores.length === 0) return v.my_rating || 0;  // fallback to old my_rating
-  return scores.reduce((a, b) => a + b, 0) / scores.length;
+  document.getElementById('submitRating').addEventListener('click', submitRating);
 }
 
 async function submitRating() {
   const msg = document.getElementById('ratingMsg');
-  if (!selectedRating) { msg.textContent = '별점을 선택해주세요.'; return; }
+  if (!selectedRating) {
+    msg.textContent = '별점을 선택해주세요.';
+    msg.style.color = 'var(--accent)';
+    return;
+  }
 
-  const fp = getFingerprint();
-  const comment = document.getElementById('visitorComment').value.trim();
+  const fp = getVisitorFingerprint();
+  const comment = document.getElementById('commentInput').value.trim();
 
   const { error } = await db.from('visitor_ratings').upsert({
     vtuber_id: currentVtuberId,
@@ -171,11 +158,12 @@ async function submitRating() {
   }, { onConflict: 'vtuber_id,visitor_fingerprint' });
 
   if (error) {
-    msg.textContent = '저장 실패: ' + error.message;
+    msg.textContent = '등록 실패: ' + error.message;
     msg.style.color = 'var(--accent)';
   } else {
-    msg.textContent = '감사합니다!';
-    msg.style.color = 'var(--accent-secondary)';
+    msg.textContent = '평점이 등록되었습니다. 감사합니다!';
+    msg.style.color = 'var(--accent-2)';
+    document.getElementById('commentInput').value = '';
     loadReviews();
   }
 }
@@ -188,68 +176,35 @@ async function loadReviews() {
     .order('created_at', { ascending: false })
     .limit(50);
 
-  const container = document.getElementById('reviewsList');
+  const list = document.getElementById('reviewList');
+  if (!list) return;
+
   if (!reviews || reviews.length === 0) {
-    container.innerHTML = '<div class="empty-state" style="padding:1rem;">아직 방문자 평가가 없습니다.</div>';
+    list.innerHTML = '<div class="empty-state">아직 방문자 평점이 없습니다.</div>';
     return;
   }
 
-  const avg = reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
-
-  container.innerHTML = `
-    <div class="reviews-summary">
-      <span class="stars">${renderStars(avg)}</span>
-      <span class="rating-num">${avg.toFixed(1)}</span>
-      <span class="rating-count">${reviews.length}명 평가</span>
-    </div>
-    ${reviews.map(r => `
+  list.innerHTML = reviews.map(r => {
+    const stars = Array.from({length:5}, (_,i) =>
+      i < r.rating ? '★' : '<span class="empty">★</span>'
+    ).join('');
+    const date = new Date(r.created_at).toLocaleDateString('ko-KR');
+    return `
       <div class="review-item">
-        <span class="stars" style="font-size:0.8rem;">${renderStars(r.rating)}</span>
-        ${r.comment ? `<span class="review-comment">${escapeHtml(r.comment)}</span>` : ''}
-        <span class="review-date">${formatDate(r.created_at)}</span>
+        <div class="review-item-head">
+          <span class="stars">${stars}</span>
+          <span class="review-date">${date}</span>
+        </div>
+        ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
       </div>
-    `).join('')}
-  `;
+    `;
+  }).join('');
 }
 
-function getFingerprint() {
-  let fp = localStorage.getItem('vtuview_fp');
-  if (!fp) {
-    fp = 'fp_' + Math.random().toString(36).substr(2, 12) + Date.now().toString(36);
-    localStorage.setItem('vtuview_fp', fp);
-  }
-  return fp;
-}
-
-function formatDate(d) {
-  if (!d) return '';
-  const dt = new Date(d);
-  if (isNaN(dt)) return '';
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const day = String(dt.getDate()).padStart(2, '0');
-  return `${y}.${m}.${day}`;
-}
-
-function renderStars(rating) {
-  let s = '';
-  for (let i = 1; i <= 5; i++) {
-    if (rating >= i) s += '★';
-    else if (rating >= i - 0.5) s += '★';
-    else s += '☆';
-  }
-  return s;
-}
-
-function renderMarkdown(text) {
-  if (typeof marked !== 'undefined') return marked.parse(text);
-  return text.replace(/\n/g, '<br>');
-}
-
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
 loadDetail();
