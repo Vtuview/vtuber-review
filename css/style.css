@@ -364,10 +364,10 @@ body::before {
 
 .card-name {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.35rem;
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -377,11 +377,11 @@ body::before {
 
 @media (min-width: 1024px) {
   .card-body { padding: 0.9rem 1.1rem 1.1rem; }
-  .card-name { font-size: 1.1rem; }
+  .card-name { font-size: 1.25rem; }
 }
 
 @media (min-width: 1600px) {
-  .card-name { font-size: 1.2rem; }
+  .card-name { font-size: 1.35rem; }
 }
 
 .card-tags {
