@@ -1181,3 +1181,188 @@ body::before {
   max-height: 95vh;
   object-fit: contain;
 }
+
+/* ========================================
+   아래 CSS를 기존 style.css 맨 하단에 추가
+   ======================================== */
+
+/* ===== 카테고리 배지 (카드 + 상세) ===== */
+.card-category {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  padding: 0.2rem 0.55rem;
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  text-transform: uppercase;
+}
+.cat-debut { background: rgba(0, 200, 150, 0.85); color: #000; }
+.cat-review { background: rgba(255, 45, 85, 0.85); color: #fff; }
+.cat-update { background: rgba(80, 160, 255, 0.85); color: #fff; }
+
+/* 상세 페이지에서 카테고리 */
+.detail-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+.detail-top-row .card-category {
+  position: static;
+}
+.detail-date {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ===== 카드 폰트 크기 확대 ===== */
+.card-name {
+  font-size: 1.15rem !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.card-tag {
+  font-size: 0.72rem !important;
+  padding: 0.15rem 0.5rem !important;
+}
+
+/* ===== 카드 작성날짜 ===== */
+.card-date {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  margin-top: 0.3rem;
+}
+
+/* ===== 세분화 별점 그리드 (상세 페이지) ===== */
+.detail-ratings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.detail-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.detail-rating-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+  min-width: 3.5rem;
+  text-transform: uppercase;
+}
+
+/* ===== 카테고리/정렬 드롭다운 (메인) ===== */
+.controls-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.controls select {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+.controls select:focus {
+  border-color: var(--accent);
+}
+
+/* ===== 관리자: 별점 클릭 입력 UI ===== */
+.star-input-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.star-input-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  min-width: 4rem;
+}
+.star-input-group {
+  display: flex;
+  gap: 0.25rem;
+}
+.star-input-btn {
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: var(--text-dim);
+  transition: color 0.15s, transform 0.1s;
+  user-select: none;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+.star-input-btn.active,
+.star-input-btn:hover {
+  color: var(--accent);
+  transform: scale(1.15);
+}
+
+/* ===== 관리자: 폼 2열 그리드 ===== */
+.form-row.two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+}
+.form-row.four {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 0.6rem;
+}
+
+/* ===== 리뷰 아이템 날짜 ===== */
+.review-date {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+.review-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+/* ===== 반응형 보정 ===== */
+@media (max-width: 600px) {
+  .detail-ratings-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-row.two,
+  .form-row.four {
+    grid-template-columns: 1fr;
+  }
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
