@@ -192,12 +192,12 @@ async function submitComment() {
 
   const fp = getVisitorFingerprint();
 
-  const { error } = await db.from('visitor_ratings').insert({
+const { error } = await db.from('visitor_ratings').upsert({
     vtuber_id: currentVtuberId,
     rating: 0,
     comment: comment,
     visitor_fingerprint: fp
-  });
+  }, { onConflict: 'vtuber_id,visitor_fingerprint' });
 
   if (error) {
     msg.textContent = '등록 실패: ' + error.message;
