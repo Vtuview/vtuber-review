@@ -22,15 +22,19 @@
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="이름, 태그로 검색...">
   </div>
-  <div class="sort-wrap">
-    <span class="sort-label">SORT</span>
+  <div class="controls-row">
+    <select id="categorySelect">
+      <option value="all">전체</option>
+      <option value="데뷔정보">데뷔정보</option>
+      <option value="리뷰">리뷰</option>
+      <option value="근황">근황</option>
+    </select>
     <select id="sortSelect">
       <option value="newest">최신순</option>
       <option value="oldest">오래된순</option>
-      <option value="rating_desc">별점 높은 순</option>
-      <option value="rating_asc">별점 낮은 순</option>
-      <option value="visitor_desc">방문자 평점 높은 순</option>
-      <option value="visitor_asc">방문자 평점 낮은 순</option>
+      <option value="rating_desc">별점 높은순</option>
+      <option value="rating_asc">별점 낮은순</option>
+      <option value="visitor_desc">방문자 평점순</option>
       <option value="name">이름순</option>
     </select>
   </div>
