@@ -2,7 +2,6 @@
 
 let allVtubers = [];
 let currentSort = 'newest';
-let currentCategory = 'all';  // 카테고리 필터 (전체/데뷔정보/리뷰/근황)
 
 async function loadVtubers() {
   const { data: vtubers, error } = await db
@@ -16,7 +15,6 @@ async function loadVtubers() {
     return;
   }
 
-  // 방문자 별점 집계
   const { data: ratings } = await db
     .from('visitor_ratings')
     .select('vtuber_id, rating');
@@ -30,24 +28,10 @@ async function loadVtubers() {
   allVtubers = vtubers.map(v => {
     const arr = ratingMap[v.id] || [];
     const avg = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-    // 세분화 별점 총점(평균) 계산
-    const totalScore = calcTotalScore(v);
-    return { ...v, visitor_avg: avg, visitor_count: arr.length, total_score: totalScore };
+    return { ...v, visitor_avg: avg, visitor_count: arr.length };
   });
 
   render();
-}
-
-// 세분화 별점 4항목 평균 (0이면 미평가)
-function calcTotalScore(v) {
-  const scores = [
-    v.rating_avatar || 0,
-    v.rating_comm || 0,
-    v.rating_song || 0,
-    v.rating_attendance || 0
-  ].filter(s => s > 0);
-  if (scores.length === 0) return 0;
-  return scores.reduce((a, b) => a + b, 0) / scores.length;
 }
 
 function sortVtubers(arr, key) {
@@ -58,15 +42,23 @@ function sortVtubers(arr, key) {
     case 'oldest':
       return sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     case 'rating_desc':
-      return sorted.sort((a, b) => (b.total_score || 0) - (a.total_score || 0));
+      return sorted.sort((a, b) => (b.my_rating || 0) - (a.my_rating || 0));
     case 'rating_asc':
-      return sorted.sort((a, b) => (a.total_score || 0) - (b.total_score || 0));
+      return sorted.sort((a, b) => (a.my_rating || 0) - (b.my_rating || 0));
     case 'visitor_desc':
       return sorted.sort((a, b) => {
+        // 평가 없는 건 뒤로
         if (a.visitor_count === 0 && b.visitor_count === 0) return 0;
         if (a.visitor_count === 0) return 1;
         if (b.visitor_count === 0) return -1;
         return b.visitor_avg - a.visitor_avg;
+      });
+    case 'visitor_asc':
+      return sorted.sort((a, b) => {
+        if (a.visitor_count === 0 && b.visitor_count === 0) return 0;
+        if (a.visitor_count === 0) return 1;
+        if (b.visitor_count === 0) return -1;
+        return a.visitor_avg - b.visitor_avg;
       });
     case 'name':
       return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
@@ -80,14 +72,9 @@ function render() {
   const gallery = document.getElementById('gallery');
 
   let filtered = allVtubers.filter(v => {
-    // 카테고리 필터
-    if (currentCategory !== 'all') {
-      if ((v.category || '리뷰') !== currentCategory) return false;
-    }
-    // 검색
     if (!query) return true;
     const haystack = [
-      v.name, ...(v.tags || []), v.my_review || '', v.category || ''
+      v.name, ...(v.tags || []), v.my_review || ''
     ].join(' ').toLowerCase();
     return haystack.includes(query);
   });
@@ -103,28 +90,19 @@ function render() {
 }
 
 function cardHTML(v, idx) {
-  const totalScore = v.total_score || 0;
-  const stars = renderStars(totalScore);
+  const rating = v.my_rating || 0;
+  const stars = renderStars(rating);
   const tags = (v.tags || []).slice(0, 3).map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
   const visitorInfo = v.visitor_count > 0
     ? `<span class="rating-count">${v.visitor_avg.toFixed(1)} · ${v.visitor_count}명</span>`
     : `<span class="rating-count">—</span>`;
 
-  const href = v.slug
-    ? `/v/${encodeURIComponent(v.slug)}`
-    : `vtuber.html?id=${v.id}`;
-
-  // 카테고리 라벨
-  const category = v.category || '리뷰';
-  const catClass = category === '데뷔정보' ? 'cat-debut' : category === '근황' ? 'cat-update' : 'cat-review';
-
-  // 작성날짜 (created_date 우선, 없으면 created_at)
-  const dateStr = formatDate(v.created_date || v.created_at);
+  // 슬러그 있으면 /v/슬러그, 없으면 fallback
+  const href = v.slug ? `/v/${encodeURIComponent(v.slug)}` : `vtuber.html?id=${v.id}`;
 
   return `
-    <a href="${href}" class="card" style="animation-delay: ${idx * 0.05}s">
+    <a href="${href}" class="card" style="animation-delay: ${Math.min(idx * 0.04, 0.5)}s">
       <div class="card-thumb">
-        <span class="card-category ${catClass}">${escapeHtml(category)}</span>
         <img src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
              onerror="this.src='${placeholderImg()}'">
       </div>
@@ -133,64 +111,44 @@ function cardHTML(v, idx) {
         <div class="card-tags">${tags}</div>
         <div class="card-rating">
           <span class="stars">${stars}</span>
-          <span class="rating-num">${totalScore.toFixed(1)}</span>
+          <span class="rating-num">${rating.toFixed(1)}</span>
           ${visitorInfo}
         </div>
-        <div class="card-date">${dateStr}</div>
       </div>
     </a>
   `;
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  const dt = new Date(d);
-  if (isNaN(dt)) return '';
-  const y = dt.getFullYear();
-  const m = String(dt.getMonth() + 1).padStart(2, '0');
-  const day = String(dt.getDate()).padStart(2, '0');
-  return `${y}.${m}.${day}`;
+function renderStars(n) {
+  const full = Math.round(n);
+  return Array.from({ length: 5 }, (_, i) =>
+    i < full ? '★' : '<span class="empty">★</span>'
+  ).join('');
 }
 
 function placeholderImg() {
-  return `data:image/svg+xml,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" fill="%231a1a2e"><rect width="400" height="400"/><text x="200" y="210" text-anchor="middle" fill="%23555" font-size="48">?</text></svg>')}`;
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 400">
+      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#2a2a38"/><stop offset="1" stop-color="#13131a"/>
+      </linearGradient></defs>
+      <rect width="300" height="400" fill="url(#g)"/>
+      <text x="150" y="210" text-anchor="middle" fill="#4a4a5a" font-family="monospace" font-size="14">NO IMAGE</text>
+    </svg>`
+  );
 }
 
-function renderStars(rating) {
-  let s = '';
-  for (let i = 1; i <= 5; i++) {
-    if (rating >= i) s += '★';
-    else if (rating >= i - 0.5) s += '★';
-    else s += '☆';
-  }
-  return s;
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
 
-function escapeHtml(str) {
-  if (!str) return '';
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-// ===== 이벤트 바인딩 =====
+// 이벤트 바인딩
 document.getElementById('searchInput').addEventListener('input', render);
-
-// 정렬 드롭다운
-const sortSelect = document.getElementById('sortSelect');
-if (sortSelect) {
-  sortSelect.addEventListener('change', () => {
-    currentSort = sortSelect.value;
-    render();
-  });
-}
-
-// 카테고리 드롭다운
-const categorySelect = document.getElementById('categorySelect');
-if (categorySelect) {
-  categorySelect.addEventListener('change', () => {
-    currentCategory = categorySelect.value;
-    render();
-  });
-}
+document.getElementById('sortSelect').addEventListener('change', (e) => {
+  currentSort = e.target.value;
+  render();
+});
 
 loadVtubers();
