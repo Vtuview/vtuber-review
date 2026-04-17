@@ -387,22 +387,22 @@ body::before {
 .card-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.3rem;
+  gap: 0.35rem;
   margin-bottom: 0.6rem;
   overflow: hidden;
-  max-height: 1.3rem;
+  max-height: 1.5rem;
 }
 
 .card-tag {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--text-dim);
   letter-spacing: 0.05em;
   white-space: nowrap;
 }
 
 @media (min-width: 1024px) {
-  .card-tag { font-size: 0.65rem; }
+  .card-tag { font-size: 0.78rem; }
 }
 
 .card-tag::before { content: '#'; color: var(--accent); }
@@ -1180,4 +1180,203 @@ body::before {
   max-width: 95%;
   max-height: 95vh;
   object-fit: contain;
+}
+
+/* ========================================
+   카테고리 뱃지 (카드 + 상세)
+   ======================================== */
+.card-category {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.card-category.cat-debut {
+  background: rgba(0, 217, 255, 0.15);
+  color: var(--accent-2);
+  border: 1px solid rgba(0, 217, 255, 0.3);
+}
+
+.card-category.cat-review {
+  background: rgba(255, 46, 106, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(255, 46, 106, 0.3);
+}
+
+.card-category.cat-update {
+  background: rgba(255, 200, 87, 0.15);
+  color: var(--star);
+  border: 1px solid rgba(255, 200, 87, 0.3);
+}
+
+@media (min-width: 1024px) {
+  .card-category { font-size: 0.68rem; }
+}
+
+/* ========================================
+   세부 별점 (상세 페이지 상단)
+   ======================================== */
+.rating-detail {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem 1.5rem;
+  margin: 1.2rem 0 1.5rem;
+  padding: 1.2rem 1.5rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+@media (max-width: 600px) {
+  .rating-detail { grid-template-columns: 1fr; }
+}
+
+.rating-detail-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rating-detail-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  min-width: 60px;
+}
+
+.rating-detail-stars {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--star);
+  font-size: 0.9rem;
+}
+
+.rating-detail-stars .empty { color: var(--border-strong); }
+
+.rating-detail-num {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  font-weight: 600;
+  min-width: 28px;
+  text-align: right;
+}
+
+.rating-total {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.8rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.3rem;
+}
+
+.rating-total-label {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.rating-total-score {
+  font-family: var(--font-mono);
+  font-size: 1.3rem;
+  color: var(--accent);
+  font-weight: 800;
+}
+
+/* ========================================
+   스탯 그리드 (상세 페이지 - 방송시간/애청자 등)
+   ======================================== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin: 0.8rem 0 1rem;
+}
+
+.stat-item {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.7rem 0.9rem;
+  text-align: center;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* ========================================
+   관리자 별점 입력 위젯
+   ======================================== */
+.admin-rating-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.8rem;
+}
+
+@media (max-width: 600px) {
+  .admin-rating-group { grid-template-columns: 1fr; }
+}
+
+.admin-rating-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0;
+}
+
+.admin-rating-item label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  min-width: 55px;
+}
+
+.admin-star-input {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.admin-star-input button {
+  background: none;
+  border: none;
+  color: var(--border-strong);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.admin-star-input button:hover,
+.admin-star-input button.active {
+  color: var(--star);
+  transform: scale(1.1);
 }
