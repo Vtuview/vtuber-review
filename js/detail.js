@@ -11,6 +11,7 @@ function getSlug() {
 
 const vtuberSlug = getSlug();
 const vtuberIdParam = new URLSearchParams(location.search).get('id');
+let currentVtuberId = null;
 
 async function loadDetail() {
   if (!vtuberSlug && !vtuberIdParam) {
@@ -39,6 +40,7 @@ async function loadDetail() {
     return;
   }
 
+  currentVtuberId = v.id;
   renderDetail(v);
 }
 
