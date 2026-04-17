@@ -93,9 +93,10 @@ function cardHTML(v, idx) {
   const rating = v.my_rating || 0;
   const stars = renderStars(rating);
   const tags = (v.tags || []).slice(0, 3).map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
-  const visitorInfo = v.visitor_count > 0
-    ? `<span class="rating-count">${v.visitor_avg.toFixed(1)} · ${v.visitor_count}명</span>`
-    : `<span class="rating-count">—</span>`;
+  const reviewDate = v.updated_at
+    ? new Date(v.updated_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    : '';
+  const visitorInfo = `<span class="rating-count">${reviewDate}</span>`;
 
   // 슬러그 있으면 /v/슬러그, 없으면 fallback
   const href = v.slug ? `/v/${encodeURIComponent(v.slug)}` : `vtuber.html?id=${v.id}`;
