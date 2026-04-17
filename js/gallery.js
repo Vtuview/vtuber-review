@@ -15,23 +15,25 @@ async function loadVtubers() {
     return;
   }
 
-  const { data: ratings } = await db
-    .from('visitor_ratings')
-    .select('vtuber_id, rating');
-
-  const ratingMap = {};
-  (ratings || []).forEach(r => {
-    if (!ratingMap[r.vtuber_id]) ratingMap[r.vtuber_id] = [];
-    ratingMap[r.vtuber_id].push(r.rating);
-  });
-
   allVtubers = vtubers.map(v => {
-    const arr = ratingMap[v.id] || [];
-    const avg = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-    return { ...v, visitor_avg: avg, visitor_count: arr.length };
+    const totalRating = calcTotalRating(v);
+    return { ...v, totalRating };
   });
 
   render();
+}
+
+// 4개 항목 평균 계산
+function calcTotalRating(v) {
+  const items = [
+    v.rating_avatar || 0,
+    v.rating_comm || 0,
+    v.rating_singing || 0,
+    v.rating_attend || 0
+  ];
+  const filled = items.filter(x => x > 0);
+  if (filled.length === 0) return 0;
+  return filled.reduce((a, b) => a + b, 0) / filled.length;
 }
 
 function sortVtubers(arr, key) {
@@ -42,24 +44,9 @@ function sortVtubers(arr, key) {
     case 'oldest':
       return sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
     case 'rating_desc':
-      return sorted.sort((a, b) => (b.my_rating || 0) - (a.my_rating || 0));
+      return sorted.sort((a, b) => (b.totalRating || 0) - (a.totalRating || 0));
     case 'rating_asc':
-      return sorted.sort((a, b) => (a.my_rating || 0) - (b.my_rating || 0));
-    case 'visitor_desc':
-      return sorted.sort((a, b) => {
-        // 평가 없는 건 뒤로
-        if (a.visitor_count === 0 && b.visitor_count === 0) return 0;
-        if (a.visitor_count === 0) return 1;
-        if (b.visitor_count === 0) return -1;
-        return b.visitor_avg - a.visitor_avg;
-      });
-    case 'visitor_asc':
-      return sorted.sort((a, b) => {
-        if (a.visitor_count === 0 && b.visitor_count === 0) return 0;
-        if (a.visitor_count === 0) return 1;
-        if (b.visitor_count === 0) return -1;
-        return a.visitor_avg - b.visitor_avg;
-      });
+      return sorted.sort((a, b) => (a.totalRating || 0) - (b.totalRating || 0));
     case 'name':
       return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
     default:
@@ -74,7 +61,7 @@ function render() {
   let filtered = allVtubers.filter(v => {
     if (!query) return true;
     const haystack = [
-      v.name, ...(v.tags || []), v.my_review || ''
+      v.name, v.category || '', ...(v.tags || []), v.my_review || ''
     ].join(' ').toLowerCase();
     return haystack.includes(query);
   });
@@ -89,16 +76,23 @@ function render() {
   gallery.innerHTML = filtered.map((v, i) => cardHTML(v, i)).join('');
 }
 
-function cardHTML(v, idx) {
-  const rating = v.my_rating || 0;
-  const stars = renderStars(rating);
-  const tags = (v.tags || []).slice(0, 3).map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
-  const reviewDate = v.updated_at
-    ? new Date(v.updated_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-    : '';
-  const visitorInfo = `<span class="rating-count">${reviewDate}</span>`;
+function categoryClass(cat) {
+  if (cat === '데뷔정보') return 'cat-debut';
+  if (cat === '근황') return 'cat-update';
+  return 'cat-review';
+}
 
-  // 슬러그 있으면 /v/슬러그, 없으면 fallback
+function cardHTML(v, idx) {
+  const rating = v.totalRating || 0;
+  const stars = renderStars(rating);
+  const tags = (v.tags || []).slice(0, 4).map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
+  const cat = v.category || '리뷰';
+  const catCls = categoryClass(cat);
+
+  const reviewDate = v.updated_at
+    ? new Date(v.updated_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })
+    : '';
+
   const href = v.slug ? `/v/${encodeURIComponent(v.slug)}` : `vtuber.html?id=${v.id}`;
 
   return `
@@ -108,12 +102,13 @@ function cardHTML(v, idx) {
              onerror="this.src='${placeholderImg()}'">
       </div>
       <div class="card-body">
+        <div class="card-category ${catCls}">${escapeHtml(cat)}</div>
         <div class="card-name">${escapeHtml(v.name)}</div>
         <div class="card-tags">${tags}</div>
         <div class="card-rating">
           <span class="stars">${stars}</span>
           <span class="rating-num">${rating.toFixed(1)}</span>
-          ${visitorInfo}
+          <span class="rating-count">${reviewDate}</span>
         </div>
       </div>
     </a>
@@ -145,7 +140,6 @@ function escapeHtml(s) {
   }[c]));
 }
 
-// 이벤트 바인딩
 document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('sortSelect').addEventListener('change', (e) => {
   currentSort = e.target.value;
