@@ -156,20 +156,85 @@ function renderDetail(v) {
       </div>
     </div>
 
-    ${reviewHTML ? `
+${reviewHTML ? `
       <h2 class="section-title">리뷰</h2>
       <div class="md-content" id="reviewContent">${reviewHTML}</div>
     ` : ''}
+
+    <h2 class="section-title">댓글</h2>
+    <div class="rating-form">
+      <textarea id="commentInput" placeholder="댓글을 남겨주세요..."></textarea>
+      <button class="btn" id="submitComment">SUBMIT</button>
+      <div id="commentMsg" style="margin-top:0.8rem; font-family: var(--font-mono); font-size: 0.8rem;"></div>
+    </div>
+    <div class="review-list" id="commentList"></div>
   `;
 
-  const reviewContent = document.getElementById('reviewContent');
+const reviewContent = document.getElementById('reviewContent');
   if (reviewContent) attachImageLightbox(reviewContent);
+
+  document.getElementById('submitComment').addEventListener('click', submitComment);
+  loadComments();
 }
 
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
+}
+
+async function submitComment() {
+  const msg = document.getElementById('commentMsg');
+  const comment = document.getElementById('commentInput').value.trim();
+  if (!comment) { msg.textContent = '댓글을 입력해주세요.'; msg.style.color = 'var(--accent)'; return; }
+
+  const fp = getVisitorFingerprint();
+
+  const { error } = await db.from('visitor_ratings').insert({
+    vtuber_id: currentVtuberId,
+    rating: 0,
+    comment: comment,
+    visitor_fingerprint: fp
+  });
+
+  if (error) {
+    msg.textContent = '등록 실패: ' + error.message;
+    msg.style.color = 'var(--accent)';
+  } else {
+    msg.textContent = '댓글이 등록되었습니다.';
+    msg.style.color = 'var(--accent-2)';
+    document.getElementById('commentInput').value = '';
+    loadComments();
+  }
+}
+
+async function loadComments() {
+  const { data: comments } = await db
+    .from('visitor_ratings')
+    .select('*')
+    .eq('vtuber_id', currentVtuberId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  const list = document.getElementById('commentList');
+  if (!list) return;
+
+  if (!comments || comments.length === 0) {
+    list.innerHTML = '<div class="empty-state">아직 댓글이 없습니다.</div>';
+    return;
+  }
+
+  list.innerHTML = comments.map(r => {
+    const date = new Date(r.created_at).toLocaleDateString('ko-KR');
+    return `
+      <div class="review-item">
+        <div class="review-item-head">
+          <span class="review-date">${date}</span>
+        </div>
+        ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
+      </div>
+    `;
+  }).join('');
 }
 
 loadDetail();
