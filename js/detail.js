@@ -101,6 +101,7 @@ function renderDetail(v) {
         <div class="card-tags">${tags}</div>
         <div class="detail-meta">
           ${v.debut_date ? `<div class="detail-meta-item"><span>DEBUT</span>${v.debut_date}</div>` : ''}
+          ${v.updated_at ? `<div class="detail-meta-item"><span>REVIEW</span>${new Date(v.updated_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })}</div>` : ''}
         </div>
         ${platformLinks ? `<div class="platform-links">${platformLinks}</div>` : ''}
       </div>
