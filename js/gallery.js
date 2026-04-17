@@ -83,8 +83,6 @@ function categoryClass(cat) {
 }
 
 function cardHTML(v, idx) {
-  const rating = v.totalRating || 0;
-  const stars = renderStars(rating);
   const tags = (v.tags || []).slice(0, 4).map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('');
   const cat = v.category || '리뷰';
   const catCls = categoryClass(cat);
@@ -106,8 +104,6 @@ function cardHTML(v, idx) {
         <div class="card-name">${escapeHtml(v.name)}</div>
         <div class="card-tags">${tags}</div>
         <div class="card-rating">
-          <span class="stars">${stars}</span>
-          <span class="rating-num">${rating.toFixed(1)}</span>
           <span class="rating-count">${reviewDate}</span>
         </div>
       </div>
