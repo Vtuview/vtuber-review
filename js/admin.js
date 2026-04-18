@@ -208,16 +208,17 @@ async function renderAdmin() {
   document.getElementById('resetBtn').addEventListener('click', resetForm);
   document.getElementById('libraryToggle').addEventListener('click', toggleLibrary);
 
-  // 별점 클릭 이벤트 바인딩
-  document.querySelectorAll('.admin-star-input').forEach(group => {
+document.querySelectorAll('.admin-star-input').forEach(group => {
     const fieldId = group.dataset.field;
     const hidden = document.getElementById(fieldId);
     group.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
         const val = parseInt(btn.dataset.value);
-        hidden.value = val;
+        const current = parseInt(hidden.value) || 0;
+        const newVal = (val === current) ? 0 : val;
+        hidden.value = newVal;
         group.querySelectorAll('button').forEach((b, i) =>
-          b.classList.toggle('active', i < val)
+          b.classList.toggle('active', i < newVal)
         );
       });
     });

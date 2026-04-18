@@ -1380,3 +1380,37 @@ body::before {
   color: var(--star);
   transform: scale(1.1);
 }
+
+/* ========================================
+   스크롤 앵커 버튼 (최상단/최하단)
+   ======================================== */
+.scroll-anchors {
+  position: fixed;
+  right: 1.2rem;
+  bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 99;
+}
+
+.scroll-anchors button {
+  width: 38px;
+  height: 38px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-anchors button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-elev);
+}
