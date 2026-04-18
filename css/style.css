@@ -18,7 +18,7 @@
   --accent-2: #00d9ff;
   --accent-glow: rgba(255, 46, 106, 0.25);
   --star: #ffc857;
-  --font-display: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'JetBrains Mono', 'Pretendard Variable', Pretendard, sans-serif;
   --font-body: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --font-mono: 'JetBrains Mono', 'Pretendard Variable', Pretendard, sans-serif;
 }
