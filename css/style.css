@@ -1414,3 +1414,76 @@ body::before {
   color: var(--accent);
   background: var(--bg-elev);
 }
+/* ========================================
+   문의 팝업 모달
+   ======================================== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 500;
+  padding: 1.5rem;
+}
+
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 480px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0.2rem;
+}
+
+.modal-close:hover { color: var(--accent); }
+
+.modal-box input,
+.modal-box textarea {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  margin-bottom: 0.6rem;
+}
+
+.modal-box input:focus,
+.modal-box textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-box textarea {
+  min-height: 100px;
+  resize: vertical;
+}

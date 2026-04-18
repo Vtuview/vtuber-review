@@ -195,7 +195,8 @@ async function renderAdmin() {
       </div>
       <div id="saveMsg" style="font-family: var(--font-mono); font-size: 0.8rem;"></div>
     </div>
-
+    <h2 class="section-title">수신 메시지</h2>
+    <div class="admin-list" id="msgList"><div class="loading">Loading...</div></div>
     <h2 class="section-title">등록된 목록</h2>
     <div class="admin-list" id="adminList"><div class="loading">Loading...</div></div>
   `;
@@ -227,6 +228,7 @@ document.querySelectorAll('.admin-star-input').forEach(group => {
   initEditor();
   initUpload();
   loadAdminList();
+  loadMessages();
 }
 
 let libraryLoaded = false;
@@ -516,4 +518,42 @@ function escapeHtml(s) {
 
 window.editVtuber = editVtuber;
 window.deleteVtuber = deleteVtuber;
+async function loadMessages() {
+  const { data } = await db.from('messages').select('*').order('created_at', { ascending: false }).limit(50);
+  const list = document.getElementById('msgList');
+  if (!data || data.length === 0) { list.innerHTML = '<div class="empty-state">수신 메시지 없음</div>'; return; }
+  list.innerHTML = data.map(m => {
+    const date = new Date(m.created_at).toLocaleDateString('ko-KR');
+    const readCls = m.is_read ? 'color:var(--text-dim)' : 'color:var(--accent-2)';
+    return `
+      <div class="admin-row" style="flex-direction:column; align-items:flex-start; gap:0.4rem;">
+        <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+          <div style="font-family:var(--font-mono); font-size:0.75rem; ${readCls};">
+            ${escapeHtml(m.name || '익명')} · ${date}
+            ${m.is_read ? '' : ' · 🔴 NEW'}
+          </div>
+          <div style="display:flex; gap:0.4rem;">
+            ${m.is_read ? '' : `<button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.65rem;" onclick="markRead('${m.id}')">읽음</button>`}
+            <button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.65rem;" onclick="deleteMsg('${m.id}')">삭제</button>
+          </div>
+        </div>
+        <div style="font-size:0.9rem; line-height:1.5; color:var(--text);">${escapeHtml(m.content)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function markRead(id) {
+  await db.from('messages').update({ is_read: true }).eq('id', id);
+  loadMessages();
+}
+
+async function deleteMsg(id) {
+  if (!confirm('삭제하시겠습니까?')) return;
+  await db.from('messages').delete().eq('id', id);
+  loadMessages();
+}
+
+window.markRead = markRead;
+window.deleteMsg = deleteMsg;
 checkAuth();

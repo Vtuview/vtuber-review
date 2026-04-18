@@ -10,7 +10,10 @@
 
 <header class="site-header">
   <div class="logo" onclick="location.href='/'">SOOP_VIRTUAL</div>
-  <div class="nav-meta">// curated.reviews</div>
+    <div style="display:flex; align-items:center; gap:1rem;">
+    <button class="btn btn-ghost" id="openContact" style="padding:0.4rem 0.8rem; font-size:0.68rem;">문의</button>
+    <div class="nav-meta">// curated.reviews</div>
+  </div>
 </header>
 
 <section class="hero">
@@ -39,5 +42,46 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/js/supabase.js"></script>
 <script src="/js/gallery.js"></script>
+<div class="modal-overlay" id="contactModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>문의하기</span>
+      <button class="modal-close" id="closeContact">✕</button>
+    </div>
+    <input type="text" id="msgName" placeholder="닉네임 (선택)">
+    <textarea id="msgContent" placeholder="리뷰 요청, 수정/삭제 요청, 기타 문의 등"></textarea>
+    <button class="btn" id="submitMsg">SEND</button>
+    <div id="msgResult" style="margin-top:0.6rem; font-family:var(--font-mono); font-size:0.78rem;"></div>
+  </div>
+</div>
+
+<script>
+document.getElementById('openContact').addEventListener('click', () => {
+  document.getElementById('contactModal').classList.add('active');
+});
+document.getElementById('closeContact').addEventListener('click', () => {
+  document.getElementById('contactModal').classList.remove('active');
+});
+document.getElementById('contactModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) e.currentTarget.classList.remove('active');
+});
+document.getElementById('submitMsg').addEventListener('click', async () => {
+  const msg = document.getElementById('msgResult');
+  const content = document.getElementById('msgContent').value.trim();
+  if (!content) { msg.textContent = '내용을 입력해주세요.'; msg.style.color = 'var(--accent)'; return; }
+  const name = document.getElementById('msgName').value.trim() || '익명';
+  let fp = localStorage.getItem('visitor_fp');
+  if (!fp) { fp = crypto.randomUUID(); localStorage.setItem('visitor_fp', fp); }
+  const { error } = await db.from('messages').insert({
+    name: name, content: content, vtuber_slug: null, visitor_fingerprint: fp
+  });
+  if (error) { msg.textContent = '전송 실패'; msg.style.color = 'var(--accent)'; }
+  else {
+    msg.textContent = '메시지가 전송되었습니다.'; msg.style.color = 'var(--accent-2)';
+    document.getElementById('msgContent').value = '';
+    document.getElementById('msgName').value = '';
+  }
+});
+</script>
 </body>
 </html>
