@@ -74,6 +74,7 @@ function render() {
   }
 
   gallery.innerHTML = filtered.map((v, i) => cardHTML(v, i)).join('');
+  setTimeout(freezeAnimatedThumbs, 100);
 }
 
 function categoryClass(cat) {
@@ -94,7 +95,7 @@ function cardHTML(v, idx) {
     <a href="${href}" class="card" style="animation-delay: ${Math.min(idx * 0.04, 0.5)}s">
       <div class="card-thumb">
         <img src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
-             onerror="this.src='${placeholderImg()}'">
+             crossorigin="anonymous" onerror="this.src='${placeholderImg()}'">
       </div>
       <div class="card-body">
         <div class="card-category ${catCls}">${escapeHtml(cat)}</div>
@@ -105,6 +106,56 @@ function cardHTML(v, idx) {
       </div>
     </a>
   `;
+}
+
+// WebP/GIF 첫 프레임 정지 처리
+function freezeAnimatedThumbs() {
+  document.querySelectorAll('.card-thumb img').forEach(img => {
+    if (img.dataset.frozen) return;
+    img.dataset.frozen = 'true';
+    const src = img.src;
+    if (!src || src.includes('svg+xml')) return; // placeholder 제외
+
+    const card = img.closest('.card');
+    if (!card) return;
+
+    // 이미지 로드 후 canvas로 첫 프레임 캡처
+    const captureFrame = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || 300;
+        canvas.height = img.naturalHeight || 400;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const staticSrc = canvas.toDataURL('image/webp', 0.85);
+        img.src = staticSrc;
+        img.dataset.animSrc = src;
+      } catch(e) {}
+    };
+
+    if (img.complete) captureFrame();
+    else img.addEventListener('load', captureFrame, { once: true });
+
+    // 호버 시 원본 애니메이션 복원
+    card.addEventListener('mouseenter', () => {
+      if (img.dataset.animSrc) img.src = img.dataset.animSrc;
+    });
+    card.addEventListener('mouseleave', () => {
+      if (img.dataset.animSrc) {
+        // 다시 정지 프레임으로
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || 300;
+          canvas.height = img.naturalHeight || 400;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          img.src = canvas.toDataURL('image/webp', 0.85);
+        } catch(e) {
+          img.src = img.dataset.animSrc;
+        }
+      }
+    });
+  });
 }
 
 function renderStars(n) {
