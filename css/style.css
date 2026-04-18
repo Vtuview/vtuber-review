@@ -1487,55 +1487,25 @@ body::before {
   min-height: 100px;
   resize: vertical;
 }
+
 /* ========================================
-   갤러리 호버 효과 - 다른 카드 어둡게
+   갤러리 호버 효과
+   - JS가 .gallery에 .has-hover 클래스 토글
+   - has-hover 상태에서만 비호버 카드 어둡게
    ======================================== */
-.gallery:hover .card {
-  opacity: 0.45;
-  filter: brightness(0.6);
+.gallery .card {
   transition: all 0.35s ease;
 }
 
-.gallery:hover .card:hover {
+.gallery.has-hover .card {
+  opacity: 0.4;
+  filter: brightness(0.5);
+}
+
+.gallery.has-hover .card:hover {
   opacity: 1;
   filter: brightness(1);
   transform: translateY(-3px);
   border-color: var(--accent);
   box-shadow: 0 15px 35px -15px var(--accent-glow);
-}
-
-/* 카드 기본 transition 보정 */
-.card {
-  transition: all 0.35s ease;
-}
-
-/* ========================================
-   WebP 애니메이션 제어 - 호버 시에만 로드
-   ======================================== */
-.card-thumb .thumb-static {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  transition: opacity 0.3s;
-}
-
-.card-thumb .thumb-animated {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 1;
-}
-
-.card:hover .thumb-animated {
-  opacity: 1;
-}
-
-.card:hover .thumb-static {
-  opacity: 0;
 }

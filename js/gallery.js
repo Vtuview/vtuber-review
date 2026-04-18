@@ -93,9 +93,9 @@ function cardHTML(v, idx) {
   return `
     <a href="${href}" class="card" style="animation-delay: ${Math.min(idx * 0.04, 0.5)}s">
       <div class="card-thumb">
-        <img class="thumb-static" src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
-             onerror="this.src='${placeholderImg()}'" decoding="async">
-        ${v.thumbnail_url ? `<img class="thumb-animated" data-src="${v.thumbnail_url}" alt="" loading="lazy" decoding="async">` : ''}
+      <div class="card-thumb">
+        <img src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
+             onerror="this.src='${placeholderImg()}'">
       </div>
       <div class="card-body">
         <div class="card-category ${catCls}">${escapeHtml(cat)}</div>
@@ -139,14 +139,26 @@ document.getElementById('sortSelect').addEventListener('change', (e) => {
   render();
 });
 
-// 호버 시 애니메이션 WebP 로드
-document.getElementById('gallery').addEventListener('mouseover', (e) => {
+// 갤러리 호버 효과 - 카드에 호버할 때만 다른 카드 어둡게
+const galleryEl = document.getElementById('gallery');
+galleryEl.addEventListener('mouseover', (e) => {
   const card = e.target.closest('.card');
-  if (!card) return;
-  const animImg = card.querySelector('.thumb-animated');
-  if (animImg && !animImg.src) {
-    animImg.src = animImg.dataset.src;
+  if (card) {
+    galleryEl.classList.add('has-hover');
   }
+});
+galleryEl.addEventListener('mouseout', (e) => {
+  const card = e.target.closest('.card');
+  if (card && !card.contains(e.relatedTarget)) {
+    // 다른 카드로 이동하는 게 아니면 has-hover 해제
+    const next = e.relatedTarget?.closest('.card');
+    if (!next) {
+      galleryEl.classList.remove('has-hover');
+    }
+  }
+});
+galleryEl.addEventListener('mouseleave', () => {
+  galleryEl.classList.remove('has-hover');
 });
 
 loadVtubers();
