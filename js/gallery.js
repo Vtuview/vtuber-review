@@ -87,24 +87,21 @@ function cardHTML(v, idx) {
   const cat = v.category || '리뷰';
   const catCls = categoryClass(cat);
 
-  const reviewDate = v.updated_at
-    ? new Date(v.updated_at).toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' })
-    : '';
 
   const href = v.slug ? `/v/${encodeURIComponent(v.slug)}` : `vtuber.html?id=${v.id}`;
 
   return `
     <a href="${href}" class="card" style="animation-delay: ${Math.min(idx * 0.04, 0.5)}s">
       <div class="card-thumb">
-        <img src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
-             onerror="this.src='${placeholderImg()}'">
+        <img class="thumb-static" src="${v.thumbnail_url || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
+             onerror="this.src='${placeholderImg()}'" decoding="async">
+        ${v.thumbnail_url ? `<img class="thumb-animated" data-src="${v.thumbnail_url}" alt="" loading="lazy" decoding="async">` : ''}
       </div>
       <div class="card-body">
         <div class="card-category ${catCls}">${escapeHtml(cat)}</div>
         <div class="card-name">${escapeHtml(v.name)}</div>
         <div class="card-tags">${tags}</div>
         <div class="card-rating">
-          <span class="rating-count">${reviewDate}</span>
         </div>
       </div>
     </a>
@@ -140,6 +137,16 @@ document.getElementById('searchInput').addEventListener('input', render);
 document.getElementById('sortSelect').addEventListener('change', (e) => {
   currentSort = e.target.value;
   render();
+});
+
+// 호버 시 애니메이션 WebP 로드
+document.getElementById('gallery').addEventListener('mouseover', (e) => {
+  const card = e.target.closest('.card');
+  if (!card) return;
+  const animImg = card.querySelector('.thumb-animated');
+  if (animImg && !animImg.src) {
+    animImg.src = animImg.dataset.src;
+  }
 });
 
 loadVtubers();
