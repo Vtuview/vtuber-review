@@ -208,7 +208,8 @@ body::before {
   text-transform: uppercase;
 }
 
-#sortSelect {
+#sortSelect,
+#catFilter {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   border-radius: 2px;
