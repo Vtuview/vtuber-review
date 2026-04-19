@@ -69,8 +69,10 @@ function sortVtubers(arr, key) {
 function render() {
   const query = document.getElementById('searchInput').value.toLowerCase().trim();
   const gallery = document.getElementById('gallery');
+  const catFilter = document.getElementById('catFilter').value;
 
   let filtered = allVtubers.filter(v => {
+    if (catFilter !== 'all' && (v.category || '리뷰') !== catFilter) return false;
     if (!query) return true;
     const haystack = [
       v.name, v.category || '', ...(v.tags || []), v.my_review || ''
@@ -201,6 +203,7 @@ document.getElementById('sortSelect').addEventListener('change', (e) => {
   currentSort = e.target.value;
   render();
 });
+document.getElementById('catFilter').addEventListener('change', render);
 
 // 갤러리 호버 효과 - 카드에 호버할 때만 다른 카드 어둡게
 const galleryEl = document.getElementById('gallery');
