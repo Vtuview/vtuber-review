@@ -74,8 +74,10 @@ async function renderAdmin() {
           <label>카테고리 *</label>
           <select id="f_category">
             <option value="데뷔정보">데뷔정보</option>
+            <option value="10분 리뷰">10분 리뷰</option>
             <option value="리뷰" selected>리뷰</option>
             <option value="근황">근황</option>
+            <option value="박제">박제</option>
           </select>
         </div>
         <div class="form-row">

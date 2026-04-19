@@ -1215,6 +1215,18 @@ body::before {
   border: 1px solid rgba(255, 200, 87, 0.3);
 }
 
+.card-category.cat-archive {
+  background: rgba(160, 120, 255, 0.15);
+  color: #a078ff;
+  border: 1px solid rgba(160, 120, 255, 0.3);
+}
+
+.card-category.cat-quick {
+  background: rgba(0, 230, 180, 0.15);
+  color: #00e6b4;
+  border: 1px solid rgba(0, 230, 180, 0.3);
+}
+
 @media (min-width: 1024px) {
   .card-category { font-size: 0.68rem; }
 }
