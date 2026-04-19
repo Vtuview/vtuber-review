@@ -101,8 +101,7 @@ function cardHTML(v, idx) {
         <div class="card-category ${catCls}">${escapeHtml(cat)}</div>
         <div class="card-name">${escapeHtml(v.name)}</div>
         <div class="card-tags">${tags}</div>
-        <div class="card-rating">
-        </div>
+        ${v.debut_date ? `<div style="font-family:var(--font-mono); font-size:0.62rem; color:var(--text-faint); margin-top:0.3rem; letter-spacing:0.1em;">DEBUT ${v.debut_date}</div>` : ''}
       </div>
     </a>
   `;
