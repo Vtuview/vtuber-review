@@ -20,3 +20,14 @@ function getVisitorFingerprint() {
   }
   return fp;
 }
+
+// 이미지 프록시 URL 변환
+// Supabase Storage URL → Cloudflare 프록시 경유
+function proxyImageUrl(url) {
+  if (!url) return url;
+  const match = url.match(/\/storage\/v1\/object\/public\/review-images\/(.+)/);
+  if (match) {
+    return '/img/' + match[1];
+  }
+  return url;
+}

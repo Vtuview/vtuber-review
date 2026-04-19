@@ -143,7 +143,7 @@ function renderDetail(v) {
   document.getElementById('detail').innerHTML = `
     <div class="detail-hero">
       <div class="detail-thumb">
-        <img src="${escapeHtml(v.thumbnail_url || '')}" alt="${escapeHtml(v.name)}"
+        <img src="${escapeHtml(proxyImageUrl(v.thumbnail_url) || '')}" alt="${escapeHtml(v.name)}"
              onerror="this.style.display='none'">
       </div>
       <div>

@@ -61,6 +61,11 @@ function autoEmbed(html) {
 function renderMarkdown(md) {
   if (!md) return '';
   let html = marked.parse(md);
+    // Supabase 이미지 URL을 프록시 경유로 변환
+  html = html.replace(
+    /https:\/\/nwebukcpkcqvtvddxpiz\.supabase\.co\/storage\/v1\/object\/public\/review-images\//g,
+    '/img/'
+  );
   html = autoEmbed(html);
 
   // DOMPurify로 XSS 방지. iframe은 신뢰 도메인만 허용.
