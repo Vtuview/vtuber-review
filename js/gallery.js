@@ -49,6 +49,18 @@ function sortVtubers(arr, key) {
       return sorted.sort((a, b) => (a.totalRating || 0) - (b.totalRating || 0));
     case 'name':
       return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+    case 'debut_desc':
+      return sorted.sort((a, b) => {
+        if (!a.debut_date) return 1;
+        if (!b.debut_date) return -1;
+        return new Date(b.debut_date) - new Date(a.debut_date);
+      });
+    case 'debut_asc':
+      return sorted.sort((a, b) => {
+        if (!a.debut_date) return 1;
+        if (!b.debut_date) return -1;
+        return new Date(a.debut_date) - new Date(b.debut_date);
+      });
     default:
       return sorted;
   }
