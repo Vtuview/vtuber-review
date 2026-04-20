@@ -88,7 +88,9 @@ function render() {
   }
 
   gallery.innerHTML = filtered.map((v, i) => cardHTML(v, i)).join('');
-  setTimeout(freezeAnimatedThumbs, 100);
+  requestAnimationFrame(() => {
+    setTimeout(freezeAnimatedThumbs, 300);
+  });
 }
 
 function categoryClass(cat) {
@@ -125,16 +127,20 @@ function cardHTML(v, idx) {
 
 // WebP/GIF 첫 프레임 정지 처리
 function freezeAnimatedThumbs() {
-  document.querySelectorAll('.card-thumb img').forEach(img => {
-    if (img.dataset.frozen) return;
+  const imgs = document.querySelectorAll('.card-thumb img');
+  let idx = 0;
+
+  function processNext() {
+    if (idx >= imgs.length) return;
+    const img = imgs[idx++];
+    if (img.dataset.frozen) { processNext(); return; }
     img.dataset.frozen = 'true';
     const src = img.src;
-    if (!src || src.includes('svg+xml')) return; // placeholder 제외
+    if (!src || src.includes('svg+xml')) { processNext(); return; }
 
     const card = img.closest('.card');
-    if (!card) return;
+    if (!card) { processNext(); return; }
 
-    // 이미지 로드 후 canvas로 첫 프레임 캡처
     const captureFrame = () => {
       try {
         const canvas = document.createElement('canvas');
@@ -146,18 +152,17 @@ function freezeAnimatedThumbs() {
         img.src = staticSrc;
         img.dataset.animSrc = src;
       } catch(e) {}
+      requestAnimationFrame(processNext);
     };
 
-    if (img.complete) captureFrame();
+    if (img.complete && img.naturalWidth > 0) captureFrame();
     else img.addEventListener('load', captureFrame, { once: true });
 
-    // 호버 시 원본 애니메이션 복원
     card.addEventListener('mouseenter', () => {
       if (img.dataset.animSrc) img.src = img.dataset.animSrc;
     });
     card.addEventListener('mouseleave', () => {
       if (img.dataset.animSrc) {
-        // 다시 정지 프레임으로
         try {
           const canvas = document.createElement('canvas');
           canvas.width = img.naturalWidth || 300;
@@ -165,12 +170,12 @@ function freezeAnimatedThumbs() {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
           img.src = canvas.toDataURL('image/webp', 0.85);
-        } catch(e) {
-          img.src = img.dataset.animSrc;
-        }
+        } catch(e) {}
       }
     });
-  });
+  }
+
+  processNext();
 }
 
 function renderStars(n) {
