@@ -141,21 +141,36 @@ function freezeAnimatedThumbs() {
     const card = img.closest('.card');
     if (!card) { processNext(); return; }
 
-    const captureFrame = () => {
+const captureFrame = () => {
       try {
+        if (!img.naturalWidth || img.naturalWidth < 10) {
+          requestAnimationFrame(processNext);
+          return;
+        }
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || 300;
-        canvas.height = img.naturalHeight || 400;
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
+        // 검은 프레임 방지: 첫 픽셀 체크
+        const pixel = ctx.getImageData(0, 0, 1, 1).data;
+        if (pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0) {
+          // 투명/검정 = 캡처 실패, 원본 유지
+          img.dataset.animSrc = src;
+          requestAnimationFrame(processNext);
+          return;
+        }
         const staticSrc = canvas.toDataURL('image/webp', 0.85);
         img.src = staticSrc;
         img.dataset.animSrc = src;
-      } catch(e) {}
+      } catch(e) {
+        // CORS 등 에러 시 원본 유지
+        img.dataset.animSrc = src;
+      }
       requestAnimationFrame(processNext);
     };
 
-    if (img.complete && img.naturalWidth > 0) captureFrame();
+    if (img.complete && img.naturalWidth > 10) captureFrame();
     else img.addEventListener('load', captureFrame, { once: true });
 
     card.addEventListener('mouseenter', () => {
