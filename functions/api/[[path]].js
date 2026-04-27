@@ -6,10 +6,10 @@ const SUPABASE_ANON_KEY = 'sb_publishable_KD9aq6S7pQHDm2BEkhC4UA_FRgg7cKh';
 
 // 테이블별 캐시 시간 (초)
 const CACHE_TTL = {
-  'vtubers': 300,        // 5분 — 자주 안 바뀜
-  'visitor_ratings': 60, // 1분 — 댓글은 좀 더 자주 갱신
+  'vtubers': 3600,        // 1시간 — 리뷰 데이터는 거의 안 바뀜
+  'visitor_ratings': 300,  // 5분 — 댓글은 좀 더 자주 갱신
 };
-const DEFAULT_TTL = 120; // 기본 2분
+const DEFAULT_TTL = 1800; // 기본 30분
 
 export async function onRequest(context) {
   const { request, params } = context;
