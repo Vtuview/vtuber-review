@@ -31,3 +31,14 @@ function proxyImageUrl(url) {
   }
   return url;
 }
+
+// API 프록시 헬퍼 — GET 읽기 쿼리를 Cloudflare 캐시 경유
+// Supabase egress 절약용
+async function proxyGet(table, queryString) {
+  const url = '/api/' + table + (queryString ? '?' + queryString : '');
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    throw new Error(`API error: ${resp.status}`);
+  }
+  return resp.json();
+}

@@ -4,23 +4,19 @@ let allVtubers = [];
 let currentSort = 'newest';
 
 async function loadVtubers() {
-  const { data: vtubers, error } = await db
-    .from('vtubers')
-    .select('*')
-    .order('created_at', { ascending: false });
+  try {
+    const vtubers = await proxyGet('vtubers', 'select=*&order=created_at.desc');
 
-  if (error) {
+    allVtubers = vtubers.map(v => {
+      const totalRating = calcTotalRating(v);
+      return { ...v, totalRating };
+    });
+
+    render();
+  } catch (err) {
     document.getElementById('gallery').innerHTML =
-      `<div class="empty-state">데이터 불러오기 실패: ${error.message}</div>`;
-    return;
+      `<div class="empty-state">데이터 불러오기 실패: ${err.message}</div>`;
   }
-
-  allVtubers = vtubers.map(v => {
-    const totalRating = calcTotalRating(v);
-    return { ...v, totalRating };
-  });
-
-  render();
 }
 
 // 4개 항목 평균 계산

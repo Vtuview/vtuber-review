@@ -19,29 +19,29 @@ async function loadDetail() {
     return;
   }
 
-  let query = db.from('vtubers').select('*');
-  if (vtuberSlug) {
-    query = query.eq('slug', vtuberSlug);
-  } else {
-    query = query.eq('id', vtuberIdParam);
-  }
+  try {
+    let query;
+    if (vtuberSlug) {
+      query = 'select=*&slug=eq.' + encodeURIComponent(vtuberSlug);
+    } else {
+      query = 'select=*&id=eq.' + encodeURIComponent(vtuberIdParam);
+    }
 
-  const { data: v, error } = await query.maybeSingle();
+    const data = await proxyGet('vtubers', query);
+    const v = data && data.length > 0 ? data[0] : null;
 
-  if (error) {
+    if (!v) {
+      document.getElementById('detail').innerHTML =
+        `<div class="empty-state">해당하는 버튜버를 찾을 수 없습니다.<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
+      return;
+    }
+
+    currentVtuberId = v.id;
+    renderDetail(v);
+  } catch (err) {
     document.getElementById('detail').innerHTML =
-      `<div class="empty-state">데이터 조회 오류: ${error.message}<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
-    return;
+      `<div class="empty-state">데이터 조회 오류: ${err.message}<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
   }
-
-  if (!v) {
-    document.getElementById('detail').innerHTML =
-      `<div class="empty-state">해당하는 버튜버를 찾을 수 없습니다.<br><br><a href="/" style="color:var(--accent);">← 메인으로</a></div>`;
-    return;
-  }
-
-  currentVtuberId = v.id;
-  renderDetail(v);
 }
 
 function calcTotal(v) {
@@ -213,32 +213,33 @@ const { error } = await db.from('visitor_ratings').upsert({
 }
 
 async function loadComments() {
-  const { data: comments } = await db
-    .from('visitor_ratings')
-    .select('*')
-    .eq('vtuber_id', currentVtuberId)
-    .order('created_at', { ascending: false })
-    .limit(50);
+  try {
+    const comments = await proxyGet('visitor_ratings',
+      `select=*&vtuber_id=eq.${currentVtuberId}&order=created_at.desc&limit=50`);
 
-  const list = document.getElementById('commentList');
-  if (!list) return;
+    const list = document.getElementById('commentList');
+    if (!list) return;
 
-  if (!comments || comments.length === 0) {
-    list.innerHTML = '<div class="empty-state">아직 댓글이 없습니다.</div>';
-    return;
-  }
+    if (!comments || comments.length === 0) {
+      list.innerHTML = '<div class="empty-state">아직 댓글이 없습니다.</div>';
+      return;
+    }
 
-  list.innerHTML = comments.map(r => {
-    const date = new Date(r.created_at).toLocaleDateString('ko-KR');
-    return `
-      <div class="review-item">
-        <div class="review-item-head">
-          <span class="review-date">${date}</span>
+    list.innerHTML = comments.map(r => {
+      const date = new Date(r.created_at).toLocaleDateString('ko-KR');
+      return `
+        <div class="review-item">
+          <div class="review-item-head">
+            <span class="review-date">${date}</span>
+          </div>
+          ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
         </div>
-        ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+  } catch (err) {
+    const list = document.getElementById('commentList');
+    if (list) list.innerHTML = '<div class="empty-state">댓글 로드 실패</div>';
+  }
 }
 
 loadDetail();
