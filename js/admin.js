@@ -424,6 +424,8 @@ async function saveVtuber() {
     msg.textContent = res.error.code === '23505' ? '이미 사용 중인 슬러그입니다.' : '저장 실패: ' + res.error.message;
     msg.style.color = 'var(--accent)';
   } else {
+    // 캐시 퍼지 — 저장 후 즉시 반영
+    fetch('/api/purge?table=vtubers', { method: 'POST' }).catch(() => {});
     msg.textContent = id ? '수정 완료' : '등록 완료';
     msg.style.color = 'var(--accent-2)';
     resetForm();
@@ -509,7 +511,10 @@ async function deleteVtuber(id, name) {
   if (!confirm(`"${name}" 삭제하시겠습니까?`)) return;
   const { error } = await db.from('vtubers').delete().eq('id', id);
   if (error) alert('삭제 실패: ' + error.message);
-  else loadAdminList();
+  else {
+    fetch('/api/purge?table=vtubers', { method: 'POST' }).catch(() => {});
+    loadAdminList();
+  }
 }
 
 function escapeHtml(s) {
