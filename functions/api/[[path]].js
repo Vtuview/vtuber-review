@@ -68,9 +68,8 @@ export async function onRequest(context) {
     status: 200,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': `public, max-age=${ttl}, s-maxage=${ttl}`,
+      'Cache-Control': 'no-store, no-cache, must-revalidate',
       'Access-Control-Allow-Origin': '*',
-      'Vary': 'Accept-Encoding',
     },
   });
 }
