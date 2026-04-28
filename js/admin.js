@@ -293,6 +293,7 @@ async function handleFiles(files) {
   const progress = document.getElementById('uploadProgress');
   const validFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
   if (validFiles.length === 0) return;
+  const newlyUploadedUrls = [];
   for (let i = 0; i < validFiles.length; i++) {
     const file = validFiles[i];
     progress.textContent = `업로드 중... (${i+1}/${validFiles.length}) ${file.name}`;
@@ -314,15 +315,18 @@ async function handleFiles(files) {
       progress.textContent = `❌ ${file.name}: ${err.error || res.status}`;
       progress.style.color = 'var(--accent)'; continue;
     }
-    const { url } = await res.json();
+    const { url, fileName } = await res.json();
     insertImageToEditor(url, file.name.replace(/\.[^.]+$/, ''));
+    newlyUploadedUrls.push({ url, name: fileName });
   }
   progress.textContent = `✓ ${validFiles.length}개 파일 업로드 완료`;
   progress.style.color = 'var(--accent-2)';
   setTimeout(() => { progress.textContent = ''; }, 3000);
-  libraryLoaded = false;
+  // 전체 재로드 없이 라이브러리가 열려있으면 새 아이템만 맨 앞에 추가
   const lib = document.getElementById('imageLibrary');
-  if (lib && !lib.classList.contains('hidden')) { loadImageLibrary(); libraryLoaded = true; }
+  if (lib && !lib.classList.contains('hidden') && libraryLoaded) {
+    newlyUploadedUrls.forEach(({ url, name }) => prependLibraryItem(lib, url, name));
+  }
 }
 
 function publicUrl(fileName) {
@@ -334,6 +338,35 @@ function insertImageToEditor(url, alt = '') {
   const doc = cm.getDoc();
   doc.replaceRange(`\n![${alt}](${url})\n`, doc.getCursor());
   cm.focus();
+}
+
+function prependLibraryItem(lib, url, name) {
+  const div = document.createElement('div');
+  div.className = 'image-lib-item';
+  div.dataset.url = url;
+  div.dataset.name = name;
+  div.innerHTML = `<img src="${url}" loading="lazy" alt=""><div class="lib-overlay">클릭해서 삽입</div><button class="lib-delete" title="삭제">✕</button>`;
+  div.addEventListener('click', e => {
+    if (e.target.classList.contains('lib-delete')) return;
+    insertImageToEditor(url, name.replace(/\.[^.]+$/, ''));
+  });
+  div.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    document.getElementById('f_thumb').value = url;
+    flashMsg(`썸네일로 설정: ${name}`);
+  });
+  div.querySelector('.lib-delete').addEventListener('click', async e => {
+    e.stopPropagation();
+    if (!confirm(`"${name}" 삭제?`)) return;
+    const token = session?.access_token || '';
+    const res = await fetch(`/r2/delete?name=${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!res.ok) alert('삭제 실패');
+    else { div.remove(); }
+  });
+  lib.prepend(div);
 }
 
 async function loadImageLibrary() {
@@ -371,7 +404,7 @@ async function loadImageLibrary() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!res.ok) alert('삭제 실패');
-      else { libraryLoaded = false; loadImageLibrary(); libraryLoaded = true; }
+      else { item.remove(); }
     });
   });
 }
