@@ -13,12 +13,21 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders() });
   }
 
-  const res = await fetch(
-    `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/r2/buckets/${R2_BUCKET}/objects?limit=1000`,
-    { headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` } }
-  );
+  // 디버그: 환경변수 확인
+  if (!CF_ACCOUNT_ID || !CF_API_TOKEN) {
+    return json({ error: 'Missing env vars', has_account: !!CF_ACCOUNT_ID, has_token: !!CF_API_TOKEN }, 500);
+  }
 
-  if (!res.ok) return json({ error: 'R2 list failed' }, 500);
+  const apiUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/r2/buckets/${R2_BUCKET}/objects?limit=1000`;
+  
+  const res = await fetch(apiUrl, {
+    headers: { 'Authorization': `Bearer ${CF_API_TOKEN}` }
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    return json({ error: 'R2 list failed', status: res.status, body }, 500);
+  }
 
   const data = await res.json();
   const objects = (data.result?.objects || []).map(obj => ({
