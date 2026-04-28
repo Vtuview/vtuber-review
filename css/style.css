@@ -1073,7 +1073,7 @@ body::before {
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 0.5rem;
   margin-top: 0.8rem;
-  max-height: 340px;
+  max-height: 476px;
   overflow-y: auto;
   padding: 0.7rem;
   background: var(--bg);
