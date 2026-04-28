@@ -1,46 +1,33 @@
+// R2 퍼블릭 버킷에서 이미지 서빙
+
 export async function onRequest(context) {
-  const { params } = context;
+  const { params, env } = context;
+  const R2_PUBLIC_URL = env.R2_PUBLIC_URL;
   const path = params.path?.join('/') || '';
 
-  if (!path) {
-    return new Response('No image path', { status: 400 });
-  }
+  if (!path) return new Response('No image path', { status: 400 });
 
-  // Supabase Storage URL 조합
-  const supabaseUrl = 'https://nwebukcpkcqvtvddxpiz.supabase.co/storage/v1/object/public/review-images/' + path;
-
-  // Cloudflare 캐시 확인
-  const cacheKey = new Request(supabaseUrl);
+  const r2Url = `${R2_PUBLIC_URL}/${path}`;
+  const cacheKey = new Request(r2Url);
   const cache = caches.default;
   let response = await cache.match(cacheKey);
 
   if (response) {
-    // 캐시 히트 - Supabase 안 건드림
-    return response;
+    const headers = new Headers(response.headers);
+    headers.set('X-Cache', 'HIT');
+    return new Response(response.body, { status: response.status, headers });
   }
 
-  // 캐시 미스 - Supabase에서 가져오기
-  response = await fetch(supabaseUrl, {
-    headers: { 'Accept': 'image/*' },
-  });
+  response = await fetch(r2Url);
+  if (!response.ok) return new Response('Image not found', { status: 404 });
 
-  if (!response.ok) {
-    return new Response('Image not found', { status: 404 });
-  }
-
-  // 응답 복제해서 캐시에 저장 (30일)
   const headers = new Headers(response.headers);
   headers.set('Cache-Control', 'public, max-age=2592000, s-maxage=2592000');
   headers.set('CDN-Cache-Control', 'max-age=2592000');
+  headers.set('Access-Control-Allow-Origin', '*');
   headers.delete('set-cookie');
 
-  const cachedResponse = new Response(response.body, {
-    status: 200,
-    headers: headers,
-  });
-
-  // 캐시에 저장 (비동기, 응답 차단 안 함)
+  const cachedResponse = new Response(response.body, { status: 200, headers });
   context.waitUntil(cache.put(cacheKey, cachedResponse.clone()));
-
   return cachedResponse;
 }

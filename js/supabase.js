@@ -21,14 +21,16 @@ function getVisitorFingerprint() {
   return fp;
 }
 
-// 이미지 프록시 URL 변환
-// Supabase Storage URL → Cloudflare 프록시 경유
+// 이미지 URL 변환
+// Supabase Storage URL or R2 URL → /img/ 프록시 경유
 function proxyImageUrl(url) {
   if (!url) return url;
-  const match = url.match(/\/storage\/v1\/object\/public\/review-images\/(.+)/);
-  if (match) {
-    return '/img/' + match[1];
-  }
+  // Supabase Storage URL 처리
+  const supaMatch = url.match(/\/storage\/v1\/object\/public\/review-images\/(.+)/);
+  if (supaMatch) return '/img/' + supaMatch[1];
+  // R2 퍼블릭 URL 처리
+  const r2Match = url.match(/pub-[a-f0-9]+\.r2\.dev\/(.+)/);
+  if (r2Match) return '/img/' + r2Match[1];
   return url;
 }
 

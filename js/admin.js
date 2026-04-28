@@ -300,16 +300,20 @@ async function handleFiles(files) {
       progress.textContent = `❌ ${file.name}: 10MB 초과`;
       progress.style.color = 'var(--accent)'; continue;
     }
-    const ext = file.name.split('.').pop().toLowerCase();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2,8)}.${ext}`;
-    const { error } = await db.storage.from('review-images').upload(fileName, file, {
-      contentType: file.type, cacheControl: '31536000',
+    const formData = new FormData();
+    formData.append('file', file);
+    const token = session?.access_token || '';
+    const res = await fetch('/r2/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}` },
+      body: formData,
     });
-    if (error) {
-      progress.textContent = `❌ ${file.name}: ${error.message}`;
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      progress.textContent = `❌ ${file.name}: ${err.error || res.status}`;
       progress.style.color = 'var(--accent)'; continue;
     }
-    const url = publicUrl(fileName);
+    const { url } = await res.json();
     insertImageToEditor(url, file.name.replace(/\.[^.]+$/, ''));
   }
   progress.textContent = `✓ ${validFiles.length}개 파일 업로드 완료`;
@@ -321,8 +325,7 @@ async function handleFiles(files) {
 }
 
 function publicUrl(fileName) {
-  const { data } = db.storage.from('review-images').getPublicUrl(fileName);
-  return data.publicUrl;
+  return `https://pub-8e76ac052fdd4082b8c8c6a11958cf51.r2.dev/${fileName}`;
 }
 
 function insertImageToEditor(url, alt = '') {
@@ -334,18 +337,16 @@ function insertImageToEditor(url, alt = '') {
 
 async function loadImageLibrary() {
   const lib = document.getElementById('imageLibrary');
-  const { data, error } = await db.storage.from('review-images')
-    .list('', { limit: 200, sortBy: { column: 'created_at', order: 'desc' } });
-  if (error) { lib.innerHTML = `<div style="grid-column:1/-1; color:var(--accent);">로딩 실패</div>`; return; }
-  uploadedImages = data.filter(item => item.name && !item.name.startsWith('.'));
+  const res = await fetch('/r2/list');
+  if (!res.ok) { lib.innerHTML = `<div style="grid-column:1/-1; color:var(--accent);">로딩 실패</div>`; return; }
+  uploadedImages = await res.json();
   if (uploadedImages.length === 0) {
     lib.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:0.75rem; padding:1rem;">업로드된 이미지 없음</div>`;
     return;
   }
   lib.innerHTML = uploadedImages.map(item => {
-    const url = publicUrl(item.name);
-    return `<div class="image-lib-item" data-url="${url}" data-name="${escapeHtml(item.name)}">
-      <img src="${url}" loading="lazy" alt=""><div class="lib-overlay">클릭해서 삽입</div>
+    return `<div class="image-lib-item" data-url="${item.url}" data-name="${escapeHtml(item.name)}">
+      <img src="${item.url}" loading="lazy" alt=""><div class="lib-overlay">클릭해서 삽입</div>
       <button class="lib-delete" title="삭제">✕</button></div>`;
   }).join('');
 
@@ -363,8 +364,12 @@ async function loadImageLibrary() {
     item.querySelector('.lib-delete').addEventListener('click', async e => {
       e.stopPropagation();
       if (!confirm(`"${name}" 삭제?`)) return;
-      const { error } = await db.storage.from('review-images').remove([name]);
-      if (error) alert('삭제 실패');
+      const token = session?.access_token || '';
+      const res = await fetch(`/r2/delete?name=${encodeURIComponent(name)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) alert('삭제 실패');
       else { libraryLoaded = false; loadImageLibrary(); libraryLoaded = true; }
     });
   });
