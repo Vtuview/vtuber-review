@@ -77,15 +77,17 @@ export async function onRequest(context) {
   }
 
   // 캐시 미스: Supabase에서 가져오기
-  // Cache-Control: no-cache 로 Supabase CDN 캐시 우회
+  // Pragma + Cache-Control 으로 Supabase CDN 완전 우회
   const resp = await fetch(supabaseTarget, {
     headers: {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
       'Accept': 'application/json',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-cache, no-store',
+      'Pragma': 'no-cache',
       'Prefer': request.headers.get('Prefer') || '',
     },
+    cache: 'no-store',
   });
 
   if (!resp.ok) {
