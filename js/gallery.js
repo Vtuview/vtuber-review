@@ -93,6 +93,7 @@ function categoryClass(cat) {
   if (cat === '데뷔정보') return 'cat-debut';
   if (cat === '근황') return 'cat-update';
   if (cat === '박제') return 'cat-archive';
+  if (cat === '예정') return 'cat-upcoming';
   if (cat === '10분 리뷰') return 'cat-quick';
   return 'cat-review';
 }

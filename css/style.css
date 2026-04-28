@@ -1222,6 +1222,12 @@ body::before {
   border: 1px solid rgba(160, 120, 255, 0.3);
 }
 
+.card-category.cat-upcoming {
+  background: rgba(255, 180, 50, 0.15);
+  color: #ffb432;
+  border: 1px solid rgba(255, 180, 50, 0.3);
+}
+
 .card-category.cat-quick {
   background: rgba(0, 230, 180, 0.15);
   color: #00e6b4;
