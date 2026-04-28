@@ -10,7 +10,12 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders() });
   }
 
-  // cursor 기반 페이지네이션으로 전체 목록 수집
+  // Cloudflare 캐시 확인 (5분)
+  const cacheKey = new Request('https://r2-list-cache.internal/list');
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
   const allObjects = [];
   let cursor = null;
 
@@ -29,9 +34,7 @@ export async function onRequest(context) {
     }
 
     const data = await res.json();
-    const objects = data.result || [];
-    allObjects.push(...objects);
-
+    allObjects.push(...(data.result || []));
     if (!data.result_info?.is_truncated) break;
     cursor = data.result_info.cursor;
   }
@@ -42,10 +45,11 @@ export async function onRequest(context) {
     size: obj.size,
     uploaded: obj.last_modified,
   }));
-
   mapped.sort((a, b) => new Date(b.uploaded) - new Date(a.uploaded));
 
-  return json(mapped, 200);
+  const response = json(mapped, 200, { 'Cache-Control': 'public, max-age=300, s-maxage=300' });
+  context.waitUntil(cache.put(cacheKey, response.clone()));
+  return response;
 }
 
 function corsHeaders() {
@@ -56,9 +60,9 @@ function corsHeaders() {
   };
 }
 
-function json(data, status = 200) {
+function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { 'Content-Type': 'application/json', ...corsHeaders() },
+    headers: { 'Content-Type': 'application/json', ...corsHeaders(), ...extraHeaders },
   });
 }
