@@ -6,8 +6,8 @@ const SUPABASE_ANON_KEY = 'sb_publishable_KD9aq6S7pQHDm2BEkhC4UA_FRgg7cKh';
 
 // 테이블별 캐시 시간 (초)
 const CACHE_TTL = {
-  'vtubers': 86400,        // 24시간
-  'visitor_ratings': 600,  // 10분
+  'vtubers': 300,          // 5분 — 저장 후 최대 5분 내 반영
+  'visitor_ratings': 60,   // 1분
 };
 const DEFAULT_TTL = 3600;
 
