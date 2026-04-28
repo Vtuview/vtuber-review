@@ -1,13 +1,13 @@
 // 캐시 퍼지 엔드포인트
-// POST /api/purge?table=vtubers → 해당 테이블 캐시 삭제
+// POST /api/purge?table=vtubers
 
 const SUPABASE_URL = 'https://nwebukcpkcqvtvddxpiz.supabase.co';
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
   const table = url.searchParams.get('table') || 'vtubers';
+  const slug = url.searchParams.get('slug') || null;
 
-  // 허용된 테이블만
   const allowed = ['vtubers', 'visitor_ratings', 'messages'];
   if (!allowed.includes(table)) {
     return new Response(JSON.stringify({ error: 'invalid table' }), {
@@ -18,14 +18,19 @@ export async function onRequest(context) {
 
   const cache = caches.default;
 
-  // 갤러리 목록 캐시 삭제 (가장 자주 쓰이는 쿼리)
-  const commonKeys = [
+  // 퍼지할 캐시 키 목록
+  const keys = [
     `${SUPABASE_URL}/rest/v1/${table}?select=*&order=created_at.desc`,
     `${SUPABASE_URL}/rest/v1/${table}?select=*`,
   ];
 
+  // slug 지정된 경우 해당 항목 캐시도 삭제
+  if (slug) {
+    keys.push(`${SUPABASE_URL}/rest/v1/${table}?select=*&slug=eq.${encodeURIComponent(slug)}`);
+  }
+
   let purged = 0;
-  for (const key of commonKeys) {
+  for (const key of keys) {
     const deleted = await cache.delete(new Request(key));
     if (deleted) purged++;
   }

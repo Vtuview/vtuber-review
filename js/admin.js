@@ -430,7 +430,7 @@ async function saveVtuber() {
     msg.style.color = 'var(--accent)';
   } else {
     // 캐시 퍼지 — 저장 후 즉시 반영
-    fetch('/api/purge?table=vtubers', { method: 'POST' }).catch(() => {});
+    fetch(`/api/purge?table=vtubers&slug=${encodeURIComponent(slug)}`, { method: 'POST' }).catch(() => {});
     msg.textContent = id ? '수정 완료' : '등록 완료';
     msg.style.color = 'var(--accent-2)';
     resetForm();
