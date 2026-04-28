@@ -66,6 +66,11 @@ function renderMarkdown(md) {
     /https:\/\/nwebukcpkcqvtvddxpiz\.supabase\.co\/storage\/v1\/object\/public\/review-images\//g,
     '/img/'
   );
+  // R2 퍼블릭 URL도 /img/ 프록시 경유로 변환
+  html = html.replace(
+    /https:\/\/pub-8e76ac052fdd4082b8c8c6a11958cf51\.r2\.dev\//g,
+    '/img/'
+  );
   html = autoEmbed(html);
 
   // DOMPurify로 XSS 방지. iframe은 신뢰 도메인만 허용.
