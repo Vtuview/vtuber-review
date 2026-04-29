@@ -93,9 +93,7 @@ function renderDetail(v) {
     `<span class="card-tag">${escapeHtml(t)}</span>`
   ).join(' ');
 
-  const reviewDate = v.updated_at
-    ? new Date(v.updated_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-    : '';
+  const reviewDate = v.review_date || (v.updated_at ? v.updated_at.split('T')[0] : '');
 
   // 스탯 (값이 있는 것만 표시)
   const stats = [];

@@ -85,6 +85,10 @@ async function renderAdmin() {
           <label>데뷔일</label>
           <input type="date" id="f_debut">
         </div>
+        <div class="form-row">
+          <label>리뷰 날짜</label>
+          <input type="date" id="f_review_date">
+        </div>
       </div>
 
       <div class="form-row">
@@ -453,6 +457,7 @@ async function saveVtuber() {
     agency: null,
     thumbnail_url: document.getElementById('f_thumb').value.trim() || null,
     debut_date: document.getElementById('f_debut').value || null,
+    review_date: document.getElementById('f_review_date').value || null,
     my_rating: Math.round(totalRating * 10) / 10,
     tags, platforms,
     broadcast_hours: parseFloat(document.getElementById('f_hours').value) || null,
@@ -487,7 +492,7 @@ function normalizeSlug(input) {
 }
 
 function resetForm() {
-  ['editId','f_name','f_slug','f_thumb','f_debut','f_tags','f_soop','f_etc','f_hours','f_fans','f_fanclub','f_subs']
+  ['editId','f_name','f_slug','f_thumb','f_debut','f_review_date','f_tags','f_soop','f_etc','f_hours','f_fans','f_fanclub','f_subs']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('f_category').value = '리뷰';
   ['f_r_avatar','f_r_comm','f_r_singing','f_r_attend'].forEach(id => {
@@ -587,6 +592,7 @@ async function editVtuber(id) {
   document.getElementById('f_category').value = v.category || '리뷰';
   document.getElementById('f_thumb').value = v.thumbnail_url || '';
   document.getElementById('f_debut').value = v.debut_date || '';
+  document.getElementById('f_review_date').value = v.review_date || '';
   document.getElementById('f_tags').value = (v.tags || []).join(', ');
   document.getElementById('f_soop').value = v.platforms?.soop || '';
   document.getElementById('f_etc').value = v.platforms?.etc || '';
