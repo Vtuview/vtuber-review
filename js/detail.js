@@ -119,6 +119,7 @@ function renderDetail(v) {
     if (!history || Object.keys(history).length === 0) return '';
     const sorted = Object.entries(history)
       .sort((a, b) => a[0].localeCompare(b[0]))
+      .filter(([, v]) => v > 0)
       .slice(-6);
     const maxVal = Math.max(...sorted.map(([, v]) => v || 0), 1);
     const rows = sorted.map(([ym, val]) => {
