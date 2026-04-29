@@ -60,8 +60,12 @@ export async function onRequest(context) {
         balloonHistory[ym] = data.b ?? 0;
         const sec = (data.c || []).reduce((s, c) => s + (c.t || 0), 0);
         broadcastHistory[ym] = Math.round(sec / 3600 * 10) / 10;
+      } else {
+        return json({ ok: false, error: `poong api ${res.status}`, ym, poongSlug }, 500);
       }
-    } catch {}
+    } catch (e) {
+      return json({ ok: false, error: e.message, ym, poongSlug }, 500);
+    }
   }
 
   // DB 업데이트
