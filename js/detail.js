@@ -155,6 +155,7 @@ function renderDetail(v) {
         <div class="detail-meta">
           ${v.debut_date ? `<div class="detail-meta-item"><span>DEBUT</span>${v.debut_date}</div>` : ''}
           ${reviewDate ? `<div class="detail-meta-item"><span>REVIEW</span>${reviewDate}</div>` : ''}
+          ${v.last_broadcast ? `<div class="detail-meta-item"><span>LAST CAST</span>${v.last_broadcast}</div>` : ''}
         </div>
         ${statsHTML}
         ${platformLinks ? `<div class="platform-links">${platformLinks}</div>` : ''}

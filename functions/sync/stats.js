@@ -86,6 +86,7 @@ async function syncOne(slug, serviceKey, dbHeaders, id = null) {
     const fanclub = data.fanclubCnt ?? null;
     const subscribers = data.subscription?.total ? parseInt(data.subscription.total) : null;
     const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
+    const lastBroadcast = data.station?.broadStart ? data.station.broadStart.split(' ')[0] : null;
 
     const query = id ? `id=eq.${id}` : `slug=eq.${slug}`;
     const patch = await fetch(
@@ -93,7 +94,7 @@ async function syncOne(slug, serviceKey, dbHeaders, id = null) {
       {
         method: 'PATCH',
         headers: dbHeaders,
-        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours }),
+        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours, last_broadcast: lastBroadcast }),
       }
     );
     return patch.ok;
