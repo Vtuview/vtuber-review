@@ -744,21 +744,23 @@ async function syncStats(slug = null) {
       if (status) { status.textContent = '동기화 실패'; status.style.color = 'var(--accent)'; }
     }
   } else {
-    // 전체: GitHub Actions 트리거 (제한 없음, 1-2분 소요)
-    if (status) { status.textContent = 'GitHub Actions 실행 중... (1-2분 후 반영)'; status.style.color = 'var(--accent-2)'; }
+    // 전체: Worker 배치 처리
+    if (status) { status.textContent = '동기화 중...'; status.style.color = 'var(--accent-2)'; }
     try {
-      const res = await fetch('/sync/trigger', {
+      const res = await fetch('/sync/stats', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offset: 0 }),
       });
       const data = await res.json();
       if (status) {
-        status.textContent = data.message || (data.ok ? '동기화 시작됨' : '실패');
-        status.style.color = data.ok ? 'var(--accent-2)' : 'var(--accent)';
-        setTimeout(() => { status.textContent = ''; }, 10000);
+        const msg = data.hasMore ? `1차 완료 (${data.success}건), 나머지 백그라운드 처리 중...` : `완료: 성공 ${data.success} / 실패 ${data.fail}`;
+        status.textContent = msg;
+        status.style.color = data.fail > 0 ? 'var(--accent)' : 'var(--accent-2)';
+        setTimeout(() => { status.textContent = ''; loadAdminList(); }, 5000);
       }
     } catch (e) {
-      if (status) { status.textContent = '트리거 실패'; status.style.color = 'var(--accent)'; }
+      if (status) { status.textContent = '동기화 실패'; status.style.color = 'var(--accent)'; }
     }
   }
 }

@@ -1,6 +1,8 @@
-// POST /sync/stats — 전체 또는 특정 slug 통계 동기화
+// POST /sync/stats — SOOP 통계 동기화 (배치 처리)
+// body: { slug: 'xxx' } 단일 또는 { offset: 0 } 배치
 
 const SUPABASE_URL = 'https://nwebukcpkcqvtvddxpiz.supabase.co';
+const BATCH_SIZE = 20;
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -12,14 +14,14 @@ export async function onRequest(context) {
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   if (!SUPABASE_SERVICE_KEY) return json({ error: 'SUPABASE_SERVICE_KEY not configured' }, 500);
 
-  // 인증 확인
   const auth = request.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
 
-  let targetSlug = null;
+  let slug = null, offset = 0;
   try {
     const body = await request.json();
-    targetSlug = body.slug || null;
+    slug = body.slug || null;
+    offset = body.offset || 0;
   } catch {}
 
   const dbHeaders = {
@@ -29,52 +31,73 @@ export async function onRequest(context) {
     'Prefer': 'return=minimal',
   };
 
-  // slug 목록 가져오기
-  let url = `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&slug=not.is.null&category=neq.소식`;
-  if (targetSlug) url += `&slug=eq.${encodeURIComponent(targetSlug)}`;
+  // 단일 slug 처리
+  if (slug) {
+    const result = await syncOne(slug, SUPABASE_SERVICE_KEY, dbHeaders);
+    return json({ success: result ? 1 : 0, fail: result ? 0 : 1, total: 1 }, 200);
+  }
 
-  const listRes = await fetch(url, { headers: dbHeaders });
-  if (!listRes.ok) return json({ error: 'DB fetch failed', status: listRes.status }, 500);
+  // 전체 배치 처리
+  const listUrl = `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&slug=not.is.null&category=neq.소식&order=created_at.asc&offset=${offset}&limit=${BATCH_SIZE}`;
+  const listRes = await fetch(listUrl, { headers: dbHeaders });
+  if (!listRes.ok) return json({ error: 'DB fetch failed' }, 500);
   const vtubers = await listRes.json();
 
   let success = 0, fail = 0;
-  const failed = [];
-  const succeeded = [];
-
   for (const v of vtubers) {
-    try {
-      const apiRes = await fetch(
-        `https://api-channel.sooplive.com/v1.1/channel/${v.slug}/dashboard`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' } }
-      );
-      if (!apiRes.ok) { fail++; continue; }
-
-      const data = await apiRes.json();
-      const fans = data.upd?.fanCnt ?? null;
-      const fanclub = data.fanclubCnt ?? null;
-      const subscribers = data.subscription?.total ? parseInt(data.subscription.total) : null;
-      const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
-
-      const patch = await fetch(
-        `${SUPABASE_URL}/rest/v1/vtubers?id=eq.${v.id}`,
-        {
-          method: 'PATCH',
-          headers: dbHeaders,
-          body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours }),
-        }
-      );
-
-      if (patch.ok) {
-        success++;
-        succeeded.push({ name: v.name, slug: v.slug, fans, fanclub, subscribers, broadcastHours });
-      } else {
-        fail++;
-        failed.push({ name: v.name, slug: v.slug, reason: 'patch fail' });
-      }
-    } catch (e) { fail++; failed.push({ name: v.name, slug: v.slug, reason: e.message }); }
+    const ok = await syncOne(v.slug, SUPABASE_SERVICE_KEY, dbHeaders, v.id);
+    if (ok) success++; else fail++;
   }
 
-  return json({ success, fail, total: vtubers.length, succeeded, failed }, 200);
+  // 다음 배치가 있으면 비동기로 트리거
+  if (vtubers.length === BATCH_SIZE) {
+    const nextUrl = new URL(request.url);
+    context.waitUntil(
+      fetch(nextUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'Authorization': auth,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ offset: offset + BATCH_SIZE }),
+      })
+    );
+  }
+
+  return json({
+    success,
+    fail,
+    total: vtubers.length,
+    offset,
+    hasMore: vtubers.length === BATCH_SIZE,
+  }, 200);
+}
+
+async function syncOne(slug, serviceKey, dbHeaders, id = null) {
+  try {
+    const apiRes = await fetch(
+      `https://api-channel.sooplive.com/v1.1/channel/${slug}/dashboard`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    if (!apiRes.ok) return false;
+
+    const data = await apiRes.json();
+    const fans = data.upd?.fanCnt ?? null;
+    const fanclub = data.fanclubCnt ?? null;
+    const subscribers = data.subscription?.total ? parseInt(data.subscription.total) : null;
+    const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
+
+    const query = id ? `id=eq.${id}` : `slug=eq.${slug}`;
+    const patch = await fetch(
+      `https://nwebukcpkcqvtvddxpiz.supabase.co/rest/v1/vtubers?${query}`,
+      {
+        method: 'PATCH',
+        headers: dbHeaders,
+        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours }),
+      }
+    );
+    return patch.ok;
+  } catch { return false; }
 }
 
 function corsHeaders() {
