@@ -73,24 +73,7 @@ export async function onRequest(context) {
   }, 200);
 }
 
-function getMonthsToSync() {
-  const months = [];
-  const now = new Date();
-  for (let i = 0; i < 2; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-  }
-  return months;
-}
-
-function extractPoongSlug(platforms) {
-  const url = platforms?.etc;
-  if (!url) return null;
-  const match = url.match(/poong\.today\/broadcast\/([^/?]+)/);
-  return match ? match[1] : null;
-}
-
-async function syncOne(slug, serviceKey, dbHeaders, id = null, vtuber = null) {
+async function syncOne(slug, serviceKey, dbHeaders, id = null) {
   try {
     const apiRes = await fetch(
       `https://api-channel.sooplive.com/v1.1/channel/${slug}/dashboard`,
@@ -105,30 +88,6 @@ async function syncOne(slug, serviceKey, dbHeaders, id = null, vtuber = null) {
     const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
     const lastBroadcast = data.station?.broadStart ? data.station.broadStart.split(' ')[0] : null;
 
-    // 풍투데이 히스토리
-    const poongSlug = extractPoongSlug(vtuber?.platforms);
-    const balloonHistory = { ...(vtuber?.balloon_history || {}) };
-    const broadcastHistory = { ...(vtuber?.broadcast_history || {}) };
-
-    if (poongSlug) {
-      const monthsToSync = getMonthsToSync();
-      for (const ym of monthsToSync) {
-        const [year, month] = ym.split('-');
-        try {
-          const poongRes = await fetch(
-            `https://static.poong.today/bj/detail/get?id=${poongSlug}&year=${year}&month=${parseInt(month)}`,
-            { headers: { 'User-Agent': 'Mozilla/5.0' } }
-          );
-          if (poongRes.ok) {
-            const poong = await poongRes.json();
-            balloonHistory[ym] = poong.b ?? 0;
-            const sec = (poong.c || []).reduce((s, c) => s + (c.t || 0), 0);
-            broadcastHistory[ym] = Math.round(sec / 3600 * 10) / 10;
-          }
-        } catch {}
-      }
-    }
-
     const query = id ? `id=eq.${id}` : `slug=eq.${slug}`;
     const patch = await fetch(
       `https://nwebukcpkcqvtvddxpiz.supabase.co/rest/v1/vtubers?${query}`,
@@ -139,8 +98,6 @@ async function syncOne(slug, serviceKey, dbHeaders, id = null, vtuber = null) {
           fans, fanclub, subscribers,
           broadcast_hours: broadcastHours,
           last_broadcast: lastBroadcast,
-          balloon_history: balloonHistory,
-          broadcast_history: broadcastHistory,
         }),
       }
     );
