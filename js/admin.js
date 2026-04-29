@@ -458,6 +458,7 @@ async function saveVtuber() {
     thumbnail_url: document.getElementById('f_thumb').value.trim() || null,
     debut_date: document.getElementById('f_debut').value || null,
     review_date: document.getElementById('f_review_date').value || null,
+    updated_at: new Date().toISOString(),
     my_rating: Math.round(totalRating * 10) / 10,
     tags, platforms,
     broadcast_hours: parseFloat(document.getElementById('f_hours').value) || null,
