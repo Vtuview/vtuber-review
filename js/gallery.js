@@ -13,6 +13,13 @@ async function loadVtubers() {
     });
 
     render();
+
+    // 가장 최근 last_broadcast 날짜 표시
+    const dates = vtubers.filter(v => v.last_broadcast).map(v => v.last_broadcast).sort().reverse();
+    if (dates.length > 0) {
+      const label = document.getElementById('syncDateLabel');
+      if (label) label.textContent = `data synced: ${dates[0]}`;
+    }
   } catch (err) {
     document.getElementById('gallery').innerHTML =
       `<div class="empty-state">데이터 불러오기 실패: ${err.message}</div>`;
