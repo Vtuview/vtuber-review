@@ -722,26 +722,44 @@ checkAuth();
 // ===== 통계 동기화 =====
 async function syncStats(slug = null) {
   const status = document.getElementById('syncStatus');
-  if (status) { status.textContent = '동기화 중...'; status.style.color = 'var(--accent-2)'; }
-
   const token = session?.access_token || '';
-  const body = slug ? { slug } : {};
 
-  try {
-    const res = await fetch('/sync/stats', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const data = await res.json();
-    if (status) {
-      status.textContent = `완료: 성공 ${data.success} / 실패 ${data.fail}`;
-      status.style.color = data.fail > 0 ? 'var(--accent)' : 'var(--accent-2)';
-      setTimeout(() => { status.textContent = ''; }, 5000);
+  if (slug) {
+    // 단일 slug: Worker 직접 호출 (빠름)
+    if (status) { status.textContent = '동기화 중...'; status.style.color = 'var(--accent-2)'; }
+    try {
+      const res = await fetch('/sync/stats', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug }),
+      });
+      const data = await res.json();
+      if (status) {
+        status.textContent = `완료: 성공 ${data.success} / 실패 ${data.fail}`;
+        status.style.color = data.fail > 0 ? 'var(--accent)' : 'var(--accent-2)';
+        setTimeout(() => { status.textContent = ''; }, 5000);
+      }
+      loadAdminList();
+    } catch (e) {
+      if (status) { status.textContent = '동기화 실패'; status.style.color = 'var(--accent)'; }
     }
-    loadAdminList();
-  } catch (e) {
-    if (status) { status.textContent = '동기화 실패'; status.style.color = 'var(--accent)'; }
+  } else {
+    // 전체: GitHub Actions 트리거 (제한 없음, 1-2분 소요)
+    if (status) { status.textContent = 'GitHub Actions 실행 중... (1-2분 후 반영)'; status.style.color = 'var(--accent-2)'; }
+    try {
+      const res = await fetch('/sync/trigger', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (status) {
+        status.textContent = data.message || (data.ok ? '동기화 시작됨' : '실패');
+        status.style.color = data.ok ? 'var(--accent-2)' : 'var(--accent)';
+        setTimeout(() => { status.textContent = ''; }, 10000);
+      }
+    } catch (e) {
+      if (status) { status.textContent = '트리거 실패'; status.style.color = 'var(--accent)'; }
+    }
   }
 }
 

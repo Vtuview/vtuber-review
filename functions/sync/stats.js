@@ -30,7 +30,7 @@ export async function onRequest(context) {
   };
 
   // slug 목록 가져오기
-  let url = `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&slug=not.is.null&category=neq.예정&category=neq.소식`;
+  let url = `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&slug=not.is.null&category=neq.소식`;
   if (targetSlug) url += `&slug=eq.${encodeURIComponent(targetSlug)}`;
 
   const listRes = await fetch(url, { headers: dbHeaders });
