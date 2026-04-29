@@ -39,6 +39,7 @@ export async function onRequest(context) {
 
   let success = 0, fail = 0;
   const failed = [];
+  const succeeded = [];
 
   for (const v of vtubers) {
     try {
@@ -63,12 +64,17 @@ export async function onRequest(context) {
         }
       );
 
-      if (patch.ok) success++;
-      else { fail++; failed.push({ name: v.name, slug: v.slug, reason: 'patch fail' }); }
+      if (patch.ok) {
+        success++;
+        succeeded.push({ name: v.name, slug: v.slug, fans, fanclub, subscribers, broadcastHours });
+      } else {
+        fail++;
+        failed.push({ name: v.name, slug: v.slug, reason: 'patch fail' });
+      }
     } catch (e) { fail++; failed.push({ name: v.name, slug: v.slug, reason: e.message }); }
   }
 
-  return json({ success, fail, total: vtubers.length, failed }, 200);
+  return json({ success, fail, total: vtubers.length, succeeded, failed }, 200);
 }
 
 function corsHeaders() {
