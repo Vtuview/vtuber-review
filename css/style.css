@@ -93,6 +93,15 @@ body::before {
   .nav-meta-desktop { display: block; }
 }
 
+.sync-date-label {
+  display: none;
+  color: var(--text-dim);
+}
+
+@media (min-width: 640px) {
+  .sync-date-label { display: inline; }
+}
+
 @media (min-width: 1024px) {
   .site-header { padding: 1.2rem 2rem; }
   .logo { font-size: 1.05rem; }
