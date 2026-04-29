@@ -224,6 +224,34 @@ const reviewContent = document.getElementById('reviewContent');
 
   document.getElementById('submitComment').addEventListener('click', submitComment);
   loadComments();
+
+  // 풍투데이 히스토리 백그라운드 갱신
+  if (vtuberSlug) {
+    fetch(`/sync/poong?slug=${encodeURIComponent(vtuberSlug)}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok && data.balloon_history) {
+          v.balloon_history = data.balloon_history;
+          v.broadcast_history = data.broadcast_history;
+          const histEl = document.querySelector('.history-grid');
+          const newHTML = buildHistoryHTML(v);
+          if (newHTML) {
+            if (histEl) {
+              const tmp = document.createElement('div');
+              tmp.innerHTML = newHTML;
+              histEl.replaceWith(tmp.firstElementChild);
+            } else {
+              const statsEl = document.querySelector('.stats-grid');
+              if (statsEl) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = newHTML;
+                statsEl.insertAdjacentElement('afterend', tmp.firstElementChild);
+              }
+            }
+          }
+        }
+      }).catch(() => {});
+  }
 }
 
 function escapeHtml(s) {
