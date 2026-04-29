@@ -198,6 +198,10 @@ async function renderAdmin() {
       </div>
       <div id="saveMsg" style="font-family: var(--font-mono); font-size: 0.8rem;"></div>
     </div>
+    <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+      <button class="btn btn-ghost" id="syncAllBtn" style="font-size:0.8rem;">🔄 전체 통계 동기화</button>
+      <span id="syncStatus" style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim);"></span>
+    </div>
     <h2 class="section-title">수신 메시지</h2>
     <div class="admin-list" id="msgList"><div class="loading">Loading...</div></div>
     <h2 class="section-title">신규 댓글</h2>
@@ -235,6 +239,8 @@ document.querySelectorAll('.admin-star-input').forEach(group => {
   loadAdminList();
   loadMessages();
   loadCommentMgmt();
+
+  document.getElementById('syncAllBtn')?.addEventListener('click', () => syncStats());
 }
 
 let libraryLoaded = false;
@@ -712,3 +718,36 @@ async function deleteComment(id) {
 window.markCommentRead = markCommentRead;
 window.deleteComment = deleteComment;
 checkAuth();
+
+// ===== 통계 동기화 =====
+async function syncStats(slug = null) {
+  const status = document.getElementById('syncStatus');
+  if (status) { status.textContent = '동기화 중...'; status.style.color = 'var(--accent-2)'; }
+
+  const token = session?.access_token || '';
+  const body = slug ? { slug } : {};
+
+  try {
+    const res = await fetch('/sync/stats', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (status) {
+      status.textContent = `완료: 성공 ${data.success} / 실패 ${data.fail}`;
+      status.style.color = data.fail > 0 ? 'var(--accent)' : 'var(--accent-2)';
+      setTimeout(() => { status.textContent = ''; }, 5000);
+    }
+    loadAdminList();
+  } catch (e) {
+    if (status) { status.textContent = '동기화 실패'; status.style.color = 'var(--accent)'; }
+  }
+}
+
+async function syncSingleStats(slug) {
+  await syncStats(slug);
+}
+
+window.syncStats = syncStats;
+window.syncSingleStats = syncSingleStats;
