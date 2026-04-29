@@ -495,24 +495,78 @@ function resetForm() {
   if (lib && btn) { lib.classList.add('hidden'); btn.textContent = '기존 이미지 보기 ▾'; }
 }
 
+let adminAllData = [];
+let adminPage = 0;
+const ADMIN_PAGE_SIZE = 10;
+let adminSearchQuery = '';
+
 async function loadAdminList() {
   const { data } = await db.from('vtubers').select('*').order('created_at', { ascending: false });
-  const list = document.getElementById('adminList');
-  if (!data || data.length === 0) { list.innerHTML = '<div class="empty-state">등록된 항목 없음</div>'; return; }
-  list.innerHTML = data.map(v => `
-    <div class="admin-row">
-      <img src="${escapeHtml(v.thumbnail_url || '')}" onerror="this.style.visibility='hidden'">
-      <div class="admin-row-name">
-        <div style="font-weight:700;">${escapeHtml(v.name)}</div>
-        <div style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">
-          ${escapeHtml(v.category || '리뷰')} · /v/${escapeHtml(v.slug || '—')}
-        </div>
-      </div>
-      <button class="btn btn-ghost" onclick="editVtuber('${v.id}')">수정</button>
-      <button class="btn btn-ghost" onclick="deleteVtuber('${v.id}', '${escapeHtml(v.name).replace(/'/g,"\\'")}')">삭제</button>
-    </div>
-  `).join('');
+  adminAllData = data || [];
+  adminPage = 0;
+  renderAdminList();
 }
+
+function renderAdminList() {
+  const list = document.getElementById('adminList');
+  if (!list) return;
+
+  const filtered = adminAllData.filter(v =>
+    !adminSearchQuery || v.name?.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
+    v.slug?.toLowerCase().includes(adminSearchQuery.toLowerCase())
+  );
+
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / ADMIN_PAGE_SIZE);
+  const start = adminPage * ADMIN_PAGE_SIZE;
+  const paged = filtered.slice(start, start + ADMIN_PAGE_SIZE);
+
+  if (total === 0) {
+    list.innerHTML = '<div class="empty-state">검색 결과 없음</div>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
+      <input type="text" id="adminSearch" placeholder="이름 또는 슬러그 검색..."
+        value="${escapeHtml(adminSearchQuery)}"
+        style="flex:1; padding:0.4rem 0.6rem; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:2px; font-size:0.8rem;">
+    </div>
+    ${paged.map(v => `
+      <div class="admin-row">
+        <img src="${escapeHtml(v.thumbnail_url || '')}" onerror="this.style.visibility='hidden'">
+        <div class="admin-row-name">
+          <div style="font-weight:700;">${escapeHtml(v.name)}</div>
+          <div style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono);">
+            ${escapeHtml(v.category || '리뷰')} · /v/${escapeHtml(v.slug || '—')}
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="editVtuber('${v.id}')">수정</button>
+        <button class="btn btn-ghost" onclick="deleteVtuber('${v.id}', '${escapeHtml(v.name).replace(/'/g,"\\'")}')">삭제</button>
+      </div>
+    `).join('')}
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.8rem; font-family:var(--font-mono); font-size:0.75rem; color:var(--text-dim);">
+      <span>${start + 1}–${Math.min(start + ADMIN_PAGE_SIZE, total)} / ${total}개</span>
+      <div style="display:flex; gap:0.4rem;">
+        <button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.7rem;" onclick="adminPageChange(-1)" ${adminPage === 0 ? 'disabled' : ''}>◀</button>
+        <span style="padding:0.3rem 0.4rem;">${adminPage + 1} / ${totalPages}</span>
+        <button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.7rem;" onclick="adminPageChange(1)" ${adminPage >= totalPages - 1 ? 'disabled' : ''}>▶</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('adminSearch').addEventListener('input', (e) => {
+    adminSearchQuery = e.target.value;
+    adminPage = 0;
+    renderAdminList();
+  });
+}
+
+function adminPageChange(dir) {
+  adminPage += dir;
+  renderAdminList();
+}
+window.adminPageChange = adminPageChange;
 
 async function editVtuber(id) {
   const { data: v } = await db.from('vtubers').select('*').eq('id', id).single();
