@@ -49,8 +49,8 @@ export async function onRequest(context) {
     if (ok) success++; else fail++;
   }
 
-  // 다음 배치가 있으면 비동기로 트리거
-  if (vtubers.length === BATCH_SIZE) {
+  // 다음 배치가 있으면 비동기로 트리거 (최대 50배치 = 1000개 제한으로 무한루프 방지)
+  if (vtubers.length === BATCH_SIZE && offset < BATCH_SIZE * 50) {
     const nextUrl = new URL(request.url);
     context.waitUntil(
       fetch(nextUrl.toString(), {
