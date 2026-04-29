@@ -77,7 +77,7 @@ async function renderAdmin() {
             <option value="10분 리뷰">10분 리뷰</option>
             <option value="리뷰" selected>리뷰</option>
             <option value="근황">근황</option>
-            <option value="박제">박제</option>
+            <option value="소식">소식</option>
             <option value="예정">예정</option>
           </select>
         </div>
