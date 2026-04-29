@@ -113,6 +113,46 @@ function renderDetail(v) {
     </div>
   ` : '';
 
+  // 월별 히스토리 차트
+  function buildHistoryChart(history, unit, color) {
+    if (!history || Object.keys(history).length === 0) return '';
+    const sorted = Object.entries(history)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(-6);
+    const maxVal = Math.max(...sorted.map(([, v]) => v || 0), 1);
+    const rows = sorted.map(([ym, val]) => {
+      const [year, month] = ym.split('-');
+      const label = `${parseInt(month)}월`;
+      const pct = Math.round((val || 0) / maxVal * 100);
+      const display = unit === 'h' ? `${val}h` : (val || 0).toLocaleString();
+      return `
+        <div class="hist-row">
+          <div class="hist-label">${label}</div>
+          <div class="hist-bar-wrap">
+            <div class="hist-bar" style="width:${pct}%; background:${color};"></div>
+          </div>
+          <div class="hist-value">${display}</div>
+        </div>`;
+    }).join('');
+    return rows;
+  }
+
+  const balloonRows = buildHistoryChart(v.balloon_history, 'b', 'var(--accent)');
+  const broadcastRows = buildHistoryChart(v.broadcast_history, 'h', 'var(--accent-2)');
+
+  const historyHTML = (balloonRows || broadcastRows) ? `
+    <div class="history-grid">
+      ${balloonRows ? `<div class="history-box">
+        <div class="history-title">별풍선</div>
+        ${balloonRows}
+      </div>` : ''}
+      ${broadcastRows ? `<div class="history-box">
+        <div class="history-title">방송시간</div>
+        ${broadcastRows}
+      </div>` : ''}
+    </div>
+  ` : '';
+
   // 세부 별점
   const ratingItems = [
     { label: '아바타', val: v.rating_avatar || 0 },
@@ -156,6 +196,7 @@ function renderDetail(v) {
           ${v.last_broadcast ? `<div class="detail-meta-item"><span>LAST CAST</span>${v.last_broadcast}</div>` : ''}
         </div>
         ${statsHTML}
+        ${historyHTML}
         ${platformLinks ? `<div class="platform-links">${platformLinks}</div>` : ''}
       </div>
     </div>

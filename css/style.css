@@ -1546,3 +1546,68 @@ body::before {
   border-color: var(--accent);
   box-shadow: 0 15px 35px -15px var(--accent-glow);
 }
+/* ===== 월별 히스토리 차트 ===== */
+.history-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .history-grid { grid-template-columns: 1fr; }
+}
+
+.history-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.history-title {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+
+.hist-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+}
+
+.hist-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  width: 2rem;
+  flex-shrink: 0;
+}
+
+.hist-bar-wrap {
+  flex: 1;
+  background: var(--border);
+  border-radius: 2px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.hist-bar {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.hist-value {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text);
+  width: 4.5rem;
+  text-align: right;
+  flex-shrink: 0;
+}

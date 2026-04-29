@@ -9,54 +9,108 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// 1. DB에서 slug 목록 가져오기 (소식만 제외, 예정 포함)
+// 현재 월 + 이전 달 계산
+function getMonthsToSync() {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 2; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return months;
+}
+
+// 풍투데이 slug 추출
+function extractPoongSlug(platforms) {
+  const url = platforms?.etc;
+  if (!url) return null;
+  const match = url.match(/poong\.today\/broadcast\/([^/?]+)/);
+  return match ? match[1] : null;
+}
+
+// 풍투데이 월별 데이터 가져오기
+async function fetchPoongData(slug, yearMonth) {
+  const [year, month] = yearMonth.split('-');
+  try {
+    const res = await fetch(
+      `https://static.poong.today/bj/detail/get?id=${slug}&year=${year}&month=${parseInt(month)}`,
+      { headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    const balloon = data.b ?? 0;
+    const broadcastSec = (data.c || []).reduce((sum, c) => sum + (c.t || 0), 0);
+    const broadcastHours = Math.round(broadcastSec / 3600 * 10) / 10;
+
+    return { balloon, broadcastHours };
+  } catch { return null; }
+}
+
+// DB에서 slug 목록 가져오기
 const res = await fetch(
-  `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&category=neq.소식&slug=not.is.null`,
+  `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name,platforms,balloon_history,broadcast_history&category=neq.소식&slug=not.is.null`,
   { headers }
 );
 const vtubers = await res.json();
 console.log(`총 ${vtubers.length}개 처리 시작`);
 
+const monthsToSync = getMonthsToSync();
+console.log(`동기화 월: ${monthsToSync.join(', ')}`);
+
 let success = 0, fail = 0;
 
 for (const v of vtubers) {
   try {
+    // SOOP API
     const apiRes = await fetch(
       `https://api-channel.sooplive.com/v1.1/channel/${v.slug}/dashboard`,
       { headers: { 'User-Agent': 'Mozilla/5.0' } }
     );
-
-    if (!apiRes.ok) {
-      console.log(`❌ ${v.name} (${v.slug}): API ${apiRes.status}`);
-      fail++;
-      continue;
-    }
+    if (!apiRes.ok) { fail++; continue; }
 
     const data = await apiRes.json();
-
     const fans = data.upd?.fanCnt ?? null;
     const fanclub = data.fanclubCnt ?? null;
     const subscribers = data.subscription?.total ? parseInt(data.subscription.total) : null;
     const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
     const lastBroadcast = data.station?.broadStart ? data.station.broadStart.split(' ')[0] : null;
 
-    // 2. Supabase 업데이트
+    // 풍투데이 히스토리
+    const poongSlug = extractPoongSlug(v.platforms);
+    const balloonHistory = { ...(v.balloon_history || {}) };
+    const broadcastHistory = { ...(v.broadcast_history || {}) };
+
+    if (poongSlug) {
+      for (const ym of monthsToSync) {
+        const poong = await fetchPoongData(poongSlug, ym);
+        if (poong) {
+          balloonHistory[ym] = poong.balloon;
+          broadcastHistory[ym] = poong.broadcastHours;
+        }
+        await new Promise(r => setTimeout(r, 200));
+      }
+    }
+
     const patch = await fetch(
       `${SUPABASE_URL}/rest/v1/vtubers?id=eq.${v.id}`,
       {
         method: 'PATCH',
         headers: { ...headers, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours, last_broadcast: lastBroadcast }),
+        body: JSON.stringify({
+          fans, fanclub, subscribers,
+          broadcast_hours: broadcastHours,
+          last_broadcast: lastBroadcast,
+          balloon_history: balloonHistory,
+          broadcast_history: broadcastHistory,
+        }),
       }
     );
 
     if (patch.ok) {
-      console.log(`✅ ${v.name}: 팬 ${fans} / 팬클럽 ${fanclub} / 구독 ${subscribers} / 방송 ${broadcastHours}h / 마지막방송 ${lastBroadcast}`);
+      console.log(`✅ ${v.name}: 팬 ${fans} / 별풍 ${balloonHistory[monthsToSync[0]] ?? '-'} / 방송 ${broadcastHours}h`);
       success++;
-    } else {
-      console.log(`❌ ${v.name}: DB 업데이트 실패`);
-      fail++;
-    }
+    } else { fail++; }
 
     await new Promise(r => setTimeout(r, 300));
 
