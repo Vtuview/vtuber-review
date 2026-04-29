@@ -62,11 +62,12 @@ export async function onRequest(context) {
         }
       );
 
-      if (patch.ok) success++; else fail++;
-    } catch { fail++; }
+      if (patch.ok) success++;
+      else { fail++; console.log('PATCH fail:', v.name, v.slug); }
+    } catch (e) { fail++; console.log('Exception:', v.name, v.slug, e.message); }
   }
 
-  return json({ success, fail, total: vtubers.length }, 200);
+  return json({ success, fail, total: vtubers.length, vtubers: vtubers.map(v=>v.slug) }, 200);
 }
 
 function corsHeaders() {
