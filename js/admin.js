@@ -200,6 +200,8 @@ async function renderAdmin() {
     </div>
     <h2 class="section-title">수신 메시지</h2>
     <div class="admin-list" id="msgList"><div class="loading">Loading...</div></div>
+    <h2 class="section-title">신규 댓글</h2>
+    <div class="admin-list" id="commentMgmtList"><div class="loading">Loading...</div></div>
     <h2 class="section-title">등록된 목록</h2>
     <div class="admin-list" id="adminList"><div class="loading">Loading...</div></div>
   `;
@@ -232,6 +234,7 @@ document.querySelectorAll('.admin-star-input').forEach(group => {
   initUpload();
   loadAdminList();
   loadMessages();
+  loadCommentMgmt();
 }
 
 let libraryLoaded = false;
@@ -602,4 +605,52 @@ async function deleteMsg(id) {
 
 window.markRead = markRead;
 window.deleteMsg = deleteMsg;
+
+async function loadCommentMgmt() {
+  const { data } = await db.from('visitor_ratings')
+    .select('*, vtubers(name, slug)')
+    .eq('is_read', false)
+    .not('comment', 'is', null)
+    .neq('comment', '')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  const list = document.getElementById('commentMgmtList');
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="empty-state">미확인 댓글 없음</div>';
+    return;
+  }
+  list.innerHTML = data.map(c => {
+    const date = new Date(c.created_at).toLocaleDateString('ko-KR');
+    const vtuberName = c.vtubers?.name || '알 수 없음';
+    const slug = c.vtubers?.slug || '';
+    return `
+      <div class="admin-row" style="flex-direction:column; align-items:flex-start; gap:0.4rem;">
+        <div style="display:flex; width:100%; justify-content:space-between; align-items:center;">
+          <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--accent-2);">
+            🔴 <a href="/v/${slug}" target="_blank" style="color:var(--accent-2);">${escapeHtml(vtuberName)}</a> · ${date}
+          </div>
+          <div style="display:flex; gap:0.4rem;">
+            <button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.65rem;" onclick="markCommentRead('${c.id}')">읽음</button>
+            <button class="btn btn-ghost" style="padding:0.3rem 0.6rem; font-size:0.65rem;" onclick="deleteComment('${c.id}')">삭제</button>
+          </div>
+        </div>
+        <div style="font-size:0.9rem; line-height:1.5; color:var(--text);">${escapeHtml(c.comment)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function markCommentRead(id) {
+  await db.from('visitor_ratings').update({ is_read: true }).eq('id', id);
+  loadCommentMgmt();
+}
+
+async function deleteComment(id) {
+  if (!confirm('댓글을 삭제하시겠습니까?')) return;
+  await db.from('visitor_ratings').delete().eq('id', id);
+  loadCommentMgmt();
+}
+
+window.markCommentRead = markCommentRead;
+window.deleteComment = deleteComment;
 checkAuth();
