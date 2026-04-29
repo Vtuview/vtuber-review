@@ -9,9 +9,9 @@ const headers = {
   'Content-Type': 'application/json',
 };
 
-// 1. DB에서 slug 목록 가져오기 (예정/소식 제외)
+// 1. DB에서 slug 목록 가져오기 (소식만 제외, 예정 포함)
 const res = await fetch(
-  `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&category=neq.예정&category=neq.소식&slug=not.is.null`,
+  `${SUPABASE_URL}/rest/v1/vtubers?select=id,slug,name&category=neq.소식&slug=not.is.null`,
   { headers }
 );
 const vtubers = await res.json();
@@ -37,8 +37,8 @@ for (const v of vtubers) {
     const fans = data.upd?.fanCnt ?? null;
     const fanclub = data.fanclubCnt ?? null;
     const subscribers = data.subscription?.total ? parseInt(data.subscription.total) : null;
-    const broadcastSeconds = data.station?.totalBroadTime ?? null;
-    const broadcastHours = broadcastSeconds ? Math.floor(broadcastSeconds / 3600) : null;
+    const broadcastHours = data.station?.totalBroadTime ? Math.floor(data.station.totalBroadTime / 3600) : null;
+    const lastBroadcast = data.station?.broadStart ? data.station.broadStart.split(' ')[0] : null;
 
     // 2. Supabase 업데이트
     const patch = await fetch(
@@ -46,19 +46,18 @@ for (const v of vtubers) {
       {
         method: 'PATCH',
         headers: { ...headers, 'Prefer': 'return=minimal' },
-        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours }),
+        body: JSON.stringify({ fans, fanclub, subscribers, broadcast_hours: broadcastHours, last_broadcast: lastBroadcast }),
       }
     );
 
     if (patch.ok) {
-      console.log(`✅ ${v.name}: 팬 ${fans} / 팬클럽 ${fanclub} / 구독 ${subscribers} / 방송 ${broadcastHours}h`);
+      console.log(`✅ ${v.name}: 팬 ${fans} / 팬클럽 ${fanclub} / 구독 ${subscribers} / 방송 ${broadcastHours}h / 마지막방송 ${lastBroadcast}`);
       success++;
     } else {
       console.log(`❌ ${v.name}: DB 업데이트 실패`);
       fail++;
     }
 
-    // API 과부하 방지
     await new Promise(r => setTimeout(r, 300));
 
   } catch (e) {
