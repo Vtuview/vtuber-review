@@ -2,7 +2,7 @@
 
 export async function onRequest(context) {
   const { request, env } = context;
-  const GITHUB_TOKEN = env.GITHUB_TOKEN;
+  const GITHUB_TOKEN = env.GH_TOKEN;
 
   if (request.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders() });
