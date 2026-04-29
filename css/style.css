@@ -85,6 +85,14 @@ body::before {
   text-transform: uppercase;
 }
 
+.nav-meta-desktop {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .nav-meta-desktop { display: block; }
+}
+
 @media (min-width: 1024px) {
   .site-header { padding: 1.2rem 2rem; }
   .logo { font-size: 1.05rem; }
