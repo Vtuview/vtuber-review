@@ -511,13 +511,28 @@ function renderAdminList() {
   const list = document.getElementById('adminList');
   if (!list) return;
 
+  // 검색창이 없으면 최초 한 번만 생성
+  if (!document.getElementById('adminSearch')) {
+    const searchWrap = document.createElement('div');
+    searchWrap.style.cssText = 'display:flex; gap:0.5rem; margin-bottom:0.8rem;';
+    searchWrap.innerHTML = `<input type="text" id="adminSearch" placeholder="이름 또는 슬러그 검색..."
+      style="flex:1; padding:0.4rem 0.6rem; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:2px; font-size:0.8rem;">`;
+    list.before(searchWrap);
+    document.getElementById('adminSearch').addEventListener('input', (e) => {
+      adminSearchQuery = e.target.value;
+      adminPage = 0;
+      renderAdminList();
+    });
+  }
+
   const filtered = adminAllData.filter(v =>
-    !adminSearchQuery || v.name?.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
+    !adminSearchQuery ||
+    v.name?.toLowerCase().includes(adminSearchQuery.toLowerCase()) ||
     v.slug?.toLowerCase().includes(adminSearchQuery.toLowerCase())
   );
 
   const total = filtered.length;
-  const totalPages = Math.ceil(total / ADMIN_PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / ADMIN_PAGE_SIZE));
   const start = adminPage * ADMIN_PAGE_SIZE;
   const paged = filtered.slice(start, start + ADMIN_PAGE_SIZE);
 
@@ -527,11 +542,6 @@ function renderAdminList() {
   }
 
   list.innerHTML = `
-    <div style="display:flex; gap:0.5rem; margin-bottom:0.8rem;">
-      <input type="text" id="adminSearch" placeholder="이름 또는 슬러그 검색..."
-        value="${escapeHtml(adminSearchQuery)}"
-        style="flex:1; padding:0.4rem 0.6rem; background:var(--bg); border:1px solid var(--border); color:var(--text); border-radius:2px; font-size:0.8rem;">
-    </div>
     ${paged.map(v => `
       <div class="admin-row">
         <img src="${escapeHtml(v.thumbnail_url || '')}" onerror="this.style.visibility='hidden'">
@@ -554,12 +564,6 @@ function renderAdminList() {
       </div>
     </div>
   `;
-
-  document.getElementById('adminSearch').addEventListener('input', (e) => {
-    adminSearchQuery = e.target.value;
-    adminPage = 0;
-    renderAdminList();
-  });
 }
 
 function adminPageChange(dir) {
