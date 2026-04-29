@@ -114,7 +114,8 @@ function renderDetail(v) {
   ` : '';
 
   // 월별 히스토리 차트
-  function buildHistoryChart(history, unit, color) {
+  function buildHistoryHTML(vdata) {
+    function buildHistoryChart(history, unit, color) {
     if (!history || Object.keys(history).length === 0) return '';
     const sorted = Object.entries(history)
       .sort((a, b) => a[0].localeCompare(b[0]))
@@ -137,21 +138,24 @@ function renderDetail(v) {
     return rows;
   }
 
-  const balloonRows = buildHistoryChart(v.balloon_history, 'b', 'var(--accent)');
-  const broadcastRows = buildHistoryChart(v.broadcast_history, 'h', 'var(--accent-2)');
+    const balloonRows = buildHistoryChart(vdata.balloon_history, 'b', 'var(--accent)');
+    const broadcastRows = buildHistoryChart(vdata.broadcast_history, 'h', 'var(--accent-2)');
 
-  const historyHTML = (balloonRows || broadcastRows) ? `
-    <div class="history-grid">
-      ${balloonRows ? `<div class="history-box">
-        <div class="history-title">별풍선</div>
-        ${balloonRows}
-      </div>` : ''}
-      ${broadcastRows ? `<div class="history-box">
-        <div class="history-title">방송시간</div>
-        ${broadcastRows}
-      </div>` : ''}
-    </div>
-  ` : '';
+    return (balloonRows || broadcastRows) ? `
+      <div class="history-grid">
+        ${balloonRows ? `<div class="history-box">
+          <div class="history-title">별풍선</div>
+          ${balloonRows}
+        </div>` : ''}
+        ${broadcastRows ? `<div class="history-box">
+          <div class="history-title">방송시간</div>
+          ${broadcastRows}
+        </div>` : ''}
+      </div>
+    ` : '';
+  }
+
+  const historyHTML = buildHistoryHTML(v);
 
   // 세부 별점
   const ratingItems = [
