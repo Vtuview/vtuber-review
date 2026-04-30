@@ -184,7 +184,22 @@ function renderDetail(v) {
 
   const reviewHTML = renderMarkdown(v.my_review);
 
-  document.getElementById('detail').innerHTML = `
+  const isNews = v.category === '소식';
+
+  document.getElementById('detail').innerHTML = isNews ? `
+    <div class="detail-hero" style="flex-direction:column; align-items:center; text-align:center;">
+      <div class="detail-thumb">
+        <img src="${escapeHtml(proxyImageUrl(v.thumbnail_url) || '')}" alt="${escapeHtml(v.name)}"
+             onerror="this.style.display='none'">
+      </div>
+      <div style="width:100%;">
+        <div class="card-category ${catCls}" style="margin:0.5rem auto;">${escapeHtml(cat)}</div>
+        <h1 class="detail-name">${escapeHtml(v.name)}</h1>
+        <div class="detail-meta" style="justify-content:center;">
+          ${reviewDate ? `<div class="detail-meta-item"><span>REVIEW</span>${reviewDate}</div>` : ''}
+        </div>
+      </div>
+    </div>` : `
     <div class="detail-hero">
       <div class="detail-thumb">
         <img src="${escapeHtml(proxyImageUrl(v.thumbnail_url) || '')}" alt="${escapeHtml(v.name)}"
@@ -204,7 +219,7 @@ function renderDetail(v) {
         ${historyHTML}
         ${platformLinks ? `<div class="platform-links">${platformLinks}</div>` : ''}
       </div>
-    </div>
+    </div>`
 
 ${reviewHTML ? `
       <h2 class="section-title">리뷰</h2>
