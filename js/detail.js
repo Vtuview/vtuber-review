@@ -243,7 +243,9 @@ const reviewContent = document.getElementById('reviewContent');
 
   // 풍투데이 히스토리 백그라운드 갱신
   if (vtuberSlug) {
-    fetch(`/sync/poong?slug=${encodeURIComponent(vtuberSlug)}`)
+    const session = db.auth ? (await db.auth.getSession())?.data?.session : null;
+    const authHeader = session?.access_token ? { 'Authorization': `Bearer ${session.access_token}` } : {};
+    fetch(`/sync/poong?slug=${encodeURIComponent(vtuberSlug)}`, { headers: authHeader })
       .then(r => r.json())
       .then(data => {
         if (data.ok && data.balloon_history) {

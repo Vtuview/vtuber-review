@@ -26,6 +26,8 @@ export async function onRequest(context) {
   if (file.size > 10 * 1024 * 1024) return json({ error: '10MB 초과' }, 400);
 
   const ext = file.name.split('.').pop().toLowerCase();
+  const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+  if (!allowedExts.includes(ext)) return json({ error: '이미지 파일만 업로드 가능합니다' }, 400);
   const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const arrayBuffer = await file.arrayBuffer();
 

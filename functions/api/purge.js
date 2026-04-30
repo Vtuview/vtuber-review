@@ -4,6 +4,11 @@
 const SUPABASE_URL = 'https://nwebukcpkcqvtvddxpiz.supabase.co';
 
 export async function onRequest(context) {
+  const auth = context.request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
   const url = new URL(context.request.url);
   const table = url.searchParams.get('table') || 'vtubers';
   const slug = url.searchParams.get('slug') || null;

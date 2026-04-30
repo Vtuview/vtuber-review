@@ -11,6 +11,10 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders() });
   }
 
+  // 인증 체크 (Supabase JWT)
+  const auth = context.request.headers.get('Authorization') || '';
+  if (!auth.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
+
   const url = new URL(request.url);
   const slug = url.searchParams.get('slug');
   if (!slug) return json({ error: 'slug required' }, 400);
@@ -65,11 +69,10 @@ export async function onRequest(context) {
         balloonHistory[ym] = data.b ?? 0;
         const sec = (data.c || []).reduce((s, c) => s + (c.t || 0), 0);
         broadcastHistory[ym] = Math.round(sec / 3600 * 10) / 10;
-      } else {
-        return json({ ok: false, error: `poong api ${res.status}`, ym, poongSlug }, 500);
       }
+      // 실패 시 해당 달 skip — 기존 데이터 보존
     } catch (e) {
-      return json({ ok: false, error: e.message, ym, poongSlug }, 500);
+      // 풍투데이 장애 시 skip
     }
   }
 
