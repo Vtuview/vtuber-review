@@ -219,7 +219,7 @@ function renderDetail(v) {
         </div>
       </div>`;
 
-  document.getElementById('detail').innerHTML = heroHTML
+  document.getElementById('detail').innerHTML = heroHTML + `
 
 ${reviewHTML ? `
       <h2 class="section-title">리뷰</h2>
