@@ -11,10 +11,6 @@ export async function onRequest(context) {
     return new Response(null, { headers: corsHeaders() });
   }
 
-  // 인증 체크 (Supabase JWT)
-  const auth = context.request.headers.get('Authorization') || '';
-  if (!auth.startsWith('Bearer ')) return json({ error: 'Unauthorized' }, 401);
-
   const url = new URL(request.url);
   const slug = url.searchParams.get('slug');
   if (!slug) return json({ error: 'slug required' }, 400);
