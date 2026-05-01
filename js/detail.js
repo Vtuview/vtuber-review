@@ -63,7 +63,6 @@ function categoryClass(cat) {
   if (cat === '근황') return 'cat-update';
   if (cat === '소식') return 'cat-archive';
   if (cat === '예정') return 'cat-upcoming';
-  if (cat === '임시비공개') return 'cat-blind';
   if (cat === '10분 리뷰') return 'cat-quick';
   return 'cat-review';
 }
@@ -185,7 +184,7 @@ function renderDetail(v) {
 
   const reviewHTML = renderMarkdown(v.my_review);
 
-  const isBlind = v.category === '임시비공개';
+  const isBlind = v.is_blind === true;
   const isNews = v.category === '소식';
 
   if (isBlind) {

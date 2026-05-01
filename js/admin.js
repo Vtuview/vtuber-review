@@ -79,8 +79,11 @@ async function renderAdmin() {
             <option value="근황">근황</option>
             <option value="소식">소식</option>
             <option value="예정">예정</option>
-            <option value="임시비공개">임시비공개</option>
           </select>
+        </div>
+        <div class="form-row">
+          <label>임시 블라인드</label>
+          <input type="checkbox" id="f_blind" style="width:auto; margin:0;">
         </div>
         <div class="form-row">
           <label>데뷔일</label>
@@ -459,6 +462,7 @@ async function saveVtuber() {
     thumbnail_url: document.getElementById('f_thumb').value.trim() || null,
     debut_date: document.getElementById('f_debut').value || null,
     review_date: document.getElementById('f_review_date').value || null,
+    is_blind: document.getElementById('f_blind').checked,
     updated_at: new Date().toISOString(),
     my_rating: Math.round(totalRating * 10) / 10,
     tags, platforms,
@@ -497,6 +501,7 @@ function resetForm() {
   ['editId','f_name','f_slug','f_thumb','f_debut','f_review_date','f_tags','f_soop','f_etc','f_hours','f_fans','f_fanclub','f_subs']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('f_category').value = '리뷰';
+  document.getElementById('f_blind').checked = false;
   ['f_r_avatar','f_r_comm','f_r_singing','f_r_attend'].forEach(id => {
     document.getElementById(id).value = '0';
   });
@@ -593,6 +598,7 @@ async function editVtuber(id) {
   document.getElementById('f_slug').value = v.slug || '';
   document.getElementById('f_category').value = v.category || '리뷰';
   document.getElementById('f_thumb').value = v.thumbnail_url || '';
+  document.getElementById('f_blind').checked = v.is_blind || false;
   document.getElementById('f_debut').value = v.debut_date || '';
   document.getElementById('f_review_date').value = v.review_date || '';
   document.getElementById('f_tags').value = (v.tags || []).join(', ');
