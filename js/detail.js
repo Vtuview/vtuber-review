@@ -204,8 +204,6 @@ function renderDetail(v) {
         </div>
       </div>
     `;
-    document.getElementById('reviewSection').style.display = 'none';
-    document.getElementById('commentSection').style.display = 'none';
     return;
   }
 
