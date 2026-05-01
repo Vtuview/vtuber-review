@@ -101,6 +101,7 @@ function categoryClass(cat) {
   if (cat === '근황') return 'cat-update';
   if (cat === '소식') return 'cat-archive';
   if (cat === '예정') return 'cat-upcoming';
+  if (cat === '임시비공개') return 'cat-blind';
   if (cat === '10분 리뷰') return 'cat-quick';
   return 'cat-review';
 }

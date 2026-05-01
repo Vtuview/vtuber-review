@@ -63,6 +63,7 @@ function categoryClass(cat) {
   if (cat === '근황') return 'cat-update';
   if (cat === '소식') return 'cat-archive';
   if (cat === '예정') return 'cat-upcoming';
+  if (cat === '임시비공개') return 'cat-blind';
   if (cat === '10분 리뷰') return 'cat-quick';
   return 'cat-review';
 }
@@ -184,7 +185,29 @@ function renderDetail(v) {
 
   const reviewHTML = renderMarkdown(v.my_review);
 
+  const isBlind = v.category === '임시비공개';
   const isNews = v.category === '소식';
+
+  if (isBlind) {
+    document.getElementById('detail').innerHTML = `
+      <div class="detail-hero" style="flex-direction:column; align-items:center; text-align:center; padding:3rem 0;">
+        <div class="detail-thumb">
+          <img src="${escapeHtml(proxyImageUrl(v.thumbnail_url) || '')}" alt="${escapeHtml(v.name)}" onerror="this.style.display='none'">
+        </div>
+        <div style="margin-top:1.5rem;">
+          <div class="card-category cat-blind">임시비공개</div>
+          <h1 class="detail-name" style="margin:0.5rem 0;">${escapeHtml(v.name)}</h1>
+          <p style="color:var(--text-dim); font-family:var(--font-mono); font-size:0.8rem; line-height:1.8; margin-top:1rem;">
+            본인 요청으로 임시 블라인드 처리된 게시물입니다.<br>
+            일정 기간 내 본인 확인이 이뤄지지 않으면 자동으로 공개 전환됩니다.
+          </p>
+        </div>
+      </div>
+    `;
+    document.getElementById('reviewSection').style.display = 'none';
+    document.getElementById('commentSection').style.display = 'none';
+    return;
+  }
 
   const heroHTML = isNews
     ? `<div class="detail-hero" style="flex-direction:column; align-items:center; text-align:center;">

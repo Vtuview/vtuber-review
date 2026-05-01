@@ -1611,3 +1611,9 @@ body::before {
   text-align: right;
   flex-shrink: 0;
 }
+
+.card-category.cat-blind {
+  background: rgba(150, 150, 150, 0.15);
+  color: #999;
+  border: 1px solid rgba(150, 150, 150, 0.3);
+}
