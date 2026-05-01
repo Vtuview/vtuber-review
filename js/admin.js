@@ -82,16 +82,18 @@ async function renderAdmin() {
           </select>
         </div>
         <div class="form-row">
-          <label>임시 블라인드</label>
-          <input type="checkbox" id="f_blind" style="width:auto; margin:0;">
-        </div>
-        <div class="form-row">
           <label>데뷔일</label>
           <input type="date" id="f_debut">
         </div>
         <div class="form-row">
           <label>리뷰 날짜</label>
           <input type="date" id="f_review_date">
+        </div>
+        <div class="form-row" style="margin-top:0.5rem;">
+          <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+            <input type="checkbox" id="f_blind" style="width:auto; margin:0; cursor:pointer;">
+            임시 블라인드
+          </label>
         </div>
       </div>
 
