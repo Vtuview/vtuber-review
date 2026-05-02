@@ -465,6 +465,7 @@ async function saveVtuber() {
     debut_date: document.getElementById('f_debut').value || null,
     review_date: document.getElementById('f_review_date').value || null,
     is_blind: document.getElementById('f_blind').checked,
+    ...(document.getElementById('f_review_date').value ? { created_at: document.getElementById('f_review_date').value + 'T00:00:00+00:00' } : {}),
     updated_at: new Date().toISOString(),
     my_rating: Math.round(totalRating * 10) / 10,
     tags, platforms,
