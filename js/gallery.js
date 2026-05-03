@@ -5,9 +5,9 @@ let currentSort = 'newest';
 
 async function loadVtubers() {
   try {
-    const vtubers = await proxyGet('vtubers', 'select=*&order=created_at.desc');
+    const vtubers = await proxyGet('vtubers', 'select=*&order=created_at.desc&category=neq.예정');
 
-    allVtubers = vtubers.filter(v => v.category !== '예정').map(v => {
+    allVtubers = vtubers.map(v => {
       const totalRating = calcTotalRating(v);
       return { ...v, totalRating };
     });
