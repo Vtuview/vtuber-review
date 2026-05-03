@@ -92,12 +92,7 @@ function render() {
 
   gallery.innerHTML = filtered.map((v, i) => cardHTML(v, i)).join('');
 
-  // 뒤로가기 시 스크롤 복원
-  const savedY = sessionStorage.getItem('scrollY');
-  if (savedY) {
-    sessionStorage.removeItem('scrollY');
-    setTimeout(() => window.scrollTo(0, parseInt(savedY)), 100);
-  }
+
   requestAnimationFrame(() => {
     setTimeout(freezeAnimatedThumbs, 300);
   });
