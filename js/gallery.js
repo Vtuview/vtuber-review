@@ -7,7 +7,7 @@ async function loadVtubers() {
   try {
     const vtubers = await proxyGet('vtubers', 'select=*&order=created_at.desc');
 
-    allVtubers = vtubers.map(v => {
+    allVtubers = vtubers.filter(v => v.category !== '예정').map(v => {
       const totalRating = calcTotalRating(v);
       return { ...v, totalRating };
     });
