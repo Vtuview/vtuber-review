@@ -118,7 +118,7 @@ function cardHTML(v, idx) {
   return `
     <a href="${href}" class="card" style="animation-delay: ${Math.min(idx * 0.04, 0.5)}s">
       <div class="card-thumb">
-        <img src="${proxyImageUrl(v.thumbnail_url) || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="eager"
+        <img src="${proxyImageUrl(v.thumbnail_url) || placeholderImg()}" alt="${escapeHtml(v.name)}" loading="lazy"
              crossorigin="anonymous" onerror="this.src='${placeholderImg()}'">
       </div>
       <div class="card-body">

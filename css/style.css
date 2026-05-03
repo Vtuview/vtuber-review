@@ -362,14 +362,10 @@ body::before {
   height: 100%;
   object-fit: cover;
   object-position: center top;
-  transition: transform 0.4s ease;
-  will-change: transform;
-  backface-visibility: hidden;
-  transform: translateZ(0);
 }
 
 .card:hover .card-thumb img {
-  transform: scale(1.06) translateZ(0);
+  transform: none;
 }
 
 .card-thumb::after {
