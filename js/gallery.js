@@ -95,10 +95,8 @@ function render() {
   // 뒤로가기 시 스크롤 복원
   const savedY = sessionStorage.getItem('scrollY');
   if (savedY) {
-    requestAnimationFrame(() => {
-      window.scrollTo(0, parseInt(savedY));
-      sessionStorage.removeItem('scrollY');
-    });
+    sessionStorage.removeItem('scrollY');
+    setTimeout(() => window.scrollTo(0, parseInt(savedY)), 100);
   }
   requestAnimationFrame(() => {
     setTimeout(freezeAnimatedThumbs, 300);
