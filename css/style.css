@@ -362,6 +362,8 @@ body::before {
   object-fit: cover;
   object-position: center top;
   transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .card:hover .card-thumb img {
