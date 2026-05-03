@@ -91,6 +91,15 @@ function render() {
   }
 
   gallery.innerHTML = filtered.map((v, i) => cardHTML(v, i)).join('');
+
+  // 뒤로가기 시 스크롤 복원
+  const savedY = sessionStorage.getItem('scrollY');
+  if (savedY) {
+    requestAnimationFrame(() => {
+      window.scrollTo(0, parseInt(savedY));
+      sessionStorage.removeItem('scrollY');
+    });
+  }
   requestAnimationFrame(() => {
     setTimeout(freezeAnimatedThumbs, 300);
   });
