@@ -13,7 +13,7 @@ async function init() {
     .in('category', ['리뷰', '10분 리뷰'])
     .order('fans', { ascending: false });
 
-  allVtubers = (data || []).filter(v => v.balloon_history && Object.keys(v.balloon_history).length > 0);
+  allVtubers = data || [];
 
   renderSummary(data || []);
   populateSelect();
