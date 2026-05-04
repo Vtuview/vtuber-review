@@ -196,9 +196,15 @@ function renderDetail(v) {
         <div style="margin-top:1.5rem;">
           <div class="card-category cat-blind">임시비공개</div>
           <h1 class="detail-name" style="margin:0.5rem 0;">${escapeHtml(v.name)}</h1>
-          <p style="color:var(--text-dim); font-family:var(--font-mono); font-size:0.8rem; line-height:1.8; margin-top:1rem;">
+          <p style="color:var(--text-dim); font-family:var(--font-mono); font-size:0.78rem; line-height:2; margin-top:1rem;">
             본인 요청으로 임시 블라인드 처리된 게시물입니다.<br>
-            일정 기간 내 본인 확인이 이뤄지지 않으면 자동으로 공개 전환됩니다.
+            <br>
+            본인 확인 방법:<br>
+            1. 본인 방송국의 과거 게시글에 임의의 숫자 8자리 댓글을 작성<br>
+            2. 해당 게시글 링크를 문의 기능을 통해 제출<br>
+            3. 확인 후 게시물 삭제 처리<br>
+            <br>
+            1주일 내 본인 확인이 이뤄지지 않으면 자동으로 공개 전환됩니다.
           </p>
         </div>
       </div>
