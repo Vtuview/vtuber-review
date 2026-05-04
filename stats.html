@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SOOP VIRTUAL / STATS</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo" onclick="location.href='/'">SOOP_VIRTUAL</div>
+    <div style="display:flex; align-items:center; gap:0.6rem;">
+      <button class="btn btn-ghost" onclick="location.href='/'" style="padding:0.3rem 0.6rem; font-size:0.65rem;">← 아카이브</button>
+    </div>
+  </header>
+
+  <main style="max-width:900px; margin:0 auto; padding:2rem 1.5rem;">
+    <div class="hero-label" style="margin-bottom:0.5rem;">— Statistics</div>
+    <h1 style="font-family:var(--font-display); font-size:2rem; margin-bottom:2rem;">SOOP <em>STATS</em></h1>
+
+    <!-- 전체 집계 카드 -->
+    <div id="summaryCards" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:1rem; margin-bottom:3rem;"></div>
+
+    <!-- 버시 선택 -->
+    <div style="margin-bottom:1.5rem;">
+      <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-dim); letter-spacing:0.15em; margin-bottom:0.6rem;">COMPARE VTUBERS</div>
+      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; align-items:center;">
+        <select id="vtuberSelect" style="padding:0.4rem 0.6rem; background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:2px; font-size:0.8rem;">
+          <option value="">버추얼 선택...</option>
+        </select>
+        <div id="selectedTags" style="display:flex; gap:0.4rem; flex-wrap:wrap;"></div>
+      </div>
+    </div>
+
+    <!-- 차트 -->
+    <div style="background:var(--card); border:1px solid var(--border); border-radius:4px; padding:1.5rem; margin-bottom:2rem;">
+      <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-dim); letter-spacing:0.15em; margin-bottom:1rem;">MONTHLY STATS</div>
+      <canvas id="mainChart" height="120"></canvas>
+    </div>
+  </main>
+
+  <script src="/js/supabase.js"></script>
+  <script src="/js/stats.js"></script>
+</body>
+</html>
