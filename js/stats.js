@@ -68,6 +68,8 @@ function populateSelect() {
     sel.appendChild(opt);
   });
 
+  document.getElementById('hideAvg').addEventListener('change', renderChart);
+
   sel.addEventListener('change', () => {
     const id = sel.value;
     if (!id) return;
@@ -104,10 +106,13 @@ function renderChart() {
   const avgBalloon = avgHistory(allVtubers, 'balloon_history', months);
   const avgBroadcast = avgHistory(allVtubers, 'broadcast_history', months);
 
+  const hideAvg = document.getElementById('hideAvg')?.checked;
+
   const datasets = [
     {
       type: 'bar',
       label: '전체 평균 방송시간',
+      hidden: hideAvg,
       data: avgBroadcast,
       backgroundColor: 'rgba(77,200,255,0.3)',
       borderColor: 'rgba(77,200,255,0.8)',
@@ -117,6 +122,7 @@ function renderChart() {
     {
       type: 'line',
       label: '전체 평균 별풍선',
+      hidden: hideAvg,
       data: avgBalloon,
       borderColor: 'rgba(255,77,143,0.8)',
       backgroundColor: 'rgba(255,77,143,0.1)',
@@ -161,9 +167,7 @@ function renderChart() {
       responsive: true,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          labels: { color: '#888', font: { size: 11 }, boxWidth: 12 }
-        }
+        legend: { display: false }
       },
       scales: {
         x: { ticks: { color: '#888' }, grid: { color: '#ffffff0f' } },
