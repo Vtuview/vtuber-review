@@ -8,14 +8,12 @@ let selectedVtubers = [];
 let chart = null;
 
 async function init() {
-  const { data } = await db.from('vtubers')
-    .select('id,name,slug,my_rating,fans,fanclub,subscribers,balloon_history,broadcast_history')
-    .in('category', ['리뷰', '10분 리뷰'])
-    .order('fans', { ascending: false });
+  const data = await proxyGet('vtubers',
+    'select=id,name,slug,category,my_rating,fans,fanclub,subscribers,balloon_history,broadcast_history&category=in.(리뷰,10분 리뷰)&order=fans.desc'
+  );
 
   allVtubers = data || [];
-
-  renderSummary(data || []);
+  renderSummary(allVtubers);
   populateSelect();
   renderChart();
 }
@@ -24,10 +22,10 @@ function renderSummary(data) {
   const reviewOnly = data.filter(v => ['리뷰', '10분 리뷰'].includes(v.category));
   const avgRating = reviewOnly.filter(v => v.my_rating > 0);
   const stats = [
-    { label: '등록 버시', value: reviewOnly.length + '명' },
+    { label: '등록 버추얼', value: reviewOnly.length + '명' },
     { label: '평균 평점', value: avgRating.length ? (avgRating.reduce((s, v) => s + v.my_rating, 0) / avgRating.length).toFixed(1) : '-' },
-    { label: '평균 애청자', value: Math.round(reviewOnly.filter(v=>v.fans).reduce((s,v)=>s+v.fans,0) / reviewOnly.filter(v=>v.fans).length).toLocaleString() },
-    { label: '평균 팬클럽', value: Math.round(reviewOnly.filter(v=>v.fanclub).reduce((s,v)=>s+v.fanclub,0) / reviewOnly.filter(v=>v.fanclub).length).toLocaleString() },
+    { label: '평균 애청자', value: (() => { const f=reviewOnly.filter(v=>v.fans); return f.length ? Math.round(f.reduce((s,v)=>s+v.fans,0)/f.length).toLocaleString() : '-'; })() },
+    { label: '평균 팬클럽', value: (() => { const f=reviewOnly.filter(v=>v.fanclub); return f.length ? Math.round(f.reduce((s,v)=>s+v.fanclub,0)/f.length).toLocaleString() : '-'; })() },
   ];
 
   document.getElementById('summaryCards').innerHTML = stats.map(s => `
